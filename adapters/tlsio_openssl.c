@@ -354,7 +354,7 @@ static OPTIONHANDLER_HANDLE tlsio_openssl_retrieveoptions(CONCRETE_IO_HANDLE han
             else if (tls_io_instance->disable_default_verify_paths)
             {
                 // Only add this option if not the default (false)
-                if (OptionHandler_AddOption(result, OPTION_DISABLE_DEFAULT_VERIFY_PATHS, &tls_io_instance->disable_crl_check) != OPTIONHANDLER_OK)
+                if (OptionHandler_AddOption(result, OPTION_DISABLE_DEFAULT_VERIFY_PATHS, &tls_io_instance->disable_default_verify_paths) != OPTIONHANDLER_OK)
                 {
                     LogError("unable to save %s option", OPTION_DISABLE_DEFAULT_VERIFY_PATHS);
                     OptionHandler_Destroy(result);
