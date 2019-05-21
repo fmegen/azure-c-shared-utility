@@ -1818,7 +1818,6 @@ int uws_client_close_handshake_async(UWS_CLIENT_HANDLE uws_client, uint16_t clos
             {
                 LIST_ITEM_HANDLE first_pending_send;
 
-                /*
                 while ((first_pending_send = singlylinkedlist_get_head_item(uws_client->pending_sends)) != NULL)
                 {
                     WS_PENDING_SEND* ws_pending_send = (WS_PENDING_SEND*)singlylinkedlist_item_get_value(first_pending_send);
@@ -1826,7 +1825,6 @@ int uws_client_close_handshake_async(UWS_CLIENT_HANDLE uws_client, uint16_t clos
                     complete_send_frame(ws_pending_send, first_pending_send, WS_SEND_FRAME_CANCELLED);
                     LogInfo("complete send frame succeeded: %p", first_pending_send);
                 }
-                */
 
                 /* Codes_SRS_UWS_CLIENT_01_466: [ On success `uws_client_close_handshake_async` shall return 0. ]*/
                 result = 0;
