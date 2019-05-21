@@ -1696,7 +1696,7 @@ static int complete_send_frame(WS_PENDING_SEND* ws_pending_send, LIST_ITEM_HANDL
         }
 
         /* Codes_SRS_UWS_CLIENT_01_434: [ The memory associated with the sent frame shall be freed. ]*/
-        LogInfo("%s: removing item %p", __FUNCTION__, pending_send_frame_item);
+        LogInfo("%s: removing item %p from queue & freeing", __FUNCTION__, pending_send_frame_item);
         free(ws_pending_send);
 
         result = 0;
@@ -1776,6 +1776,7 @@ int uws_client_close_async(UWS_CLIENT_HANDLE uws_client, ON_WS_CLOSE_COMPLETE on
 int uws_client_close_handshake_async(UWS_CLIENT_HANDLE uws_client, uint16_t close_code, const char* close_reason, ON_WS_CLOSE_COMPLETE on_ws_close_complete, void* on_ws_close_complete_context)
 {
     int result;
+    LogInfo("%s: uws_client: %p, on_ws_complete: %p", __FUNCTION__, uws_client, on_ws_close_complete);
 
     if (uws_client == NULL)
     {
@@ -1846,6 +1847,7 @@ static void on_underlying_io_send_complete(void* context, IO_SEND_RESULT send_re
     {
         LogInfo("%s: context: %p", __FUNCTION__, context);
         LIST_ITEM_HANDLE ws_pending_send_list_item = (LIST_ITEM_HANDLE)context;
+        /* if (singlylinkedlist_find(uws_client->pending_sends, find_list_node, new_pending_send_list_item) != NULL) */
         WS_PENDING_SEND* ws_pending_send = (WS_PENDING_SEND*)singlylinkedlist_item_get_value(ws_pending_send_list_item);
         if (ws_pending_send == NULL)
         {

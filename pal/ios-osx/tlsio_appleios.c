@@ -113,6 +113,7 @@ static bool process_and_destroy_head_message(TLS_IO_INSTANCE* tls_io_instance, I
     if (head_pending_io != NULL)
     {
         PENDING_TRANSMISSION* head_message = (PENDING_TRANSMISSION*)singlylinkedlist_item_get_value(head_pending_io);
+        LogInfo("%s: head_message %p (item %p, context %p), tls_io_instance %p, send_result %d", __FUNCTION__, head_message, head_pending_io, head_message->callback_context, tls_io_instance, send_result);
 
         if (singlylinkedlist_remove(tls_io_instance->pending_transmission_list, head_pending_io) != 0)
         {
@@ -465,11 +466,11 @@ static void dowork_read(TLS_IO_INSTANCE* tls_io_instance)
 
 static void dowork_send(TLS_IO_INSTANCE* tls_io_instance)
 {
-    LogInfo("Dowork send");
     LIST_ITEM_HANDLE first_pending_io = singlylinkedlist_get_head_item(tls_io_instance->pending_transmission_list);
     if (first_pending_io != NULL)
     {
         PENDING_TRANSMISSION* pending_message = (PENDING_TRANSMISSION*)singlylinkedlist_item_get_value(first_pending_io);
+        LogInfo("%s: pending message %p, tls_io_instance %p", __FUNCTION__, pending_message, tls_io_instance);
         uint8_t* buffer = ((uint8_t*)pending_message->bytes) + pending_message->size - pending_message->unsent_size;
 
         CFStreamStatus send_status = CFWriteStreamGetStatus(tls_io_instance->sockWrite);
@@ -743,6 +744,7 @@ static int tlsio_appleios_send_async(CONCRETE_IO_HANDLE tls_io, const void* buff
                     else
                     {
                         /* Codes_SRS_TLSIO_30_063: [ On success,  tlsio_send  shall enqueue for transmission the  on_send_complete , the  callback_context , the  size , and the contents of  buffer  and then return 0. ]*/
+                        LogInfo("%s: added pending_transmission %p (ctx: %p) to q of tls_io_instance %p", __FUNCTION__, pending_transmission,  pending_transmission->callback_context, tls_io_instance);
                         result = 0;
                         dowork_send(tls_io_instance);
                     }
