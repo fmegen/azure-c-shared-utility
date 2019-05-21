@@ -362,6 +362,7 @@ static int tlsio_appleios_close_async(CONCRETE_IO_HANDLE tls_io, ON_IO_CLOSE_COM
 {
     int result;
 
+    LogInfo("%s: tlsio_appleios_close has completed.", __FUNCTION__);
     if (tls_io == NULL)
     {
         /* Codes_SRS_TLSIO_30_050: [ If the tlsio_handle parameter is NULL, tlsio_appleios_close_async shall log an error and return FAILURE. ]*/
@@ -401,6 +402,7 @@ static int tlsio_appleios_close_async(CONCRETE_IO_HANDLE tls_io, ON_IO_CLOSE_COM
             /* Codes_SRS_TLSIO_30_052: [ On success tlsio_close shall return 0. ]*/
             internal_close(tls_io_instance);
             on_io_close_complete(callback_context);
+            LogInfo("tlsio_appleios_close has completed.");
             result = 0;
         }
     }
@@ -463,6 +465,7 @@ static void dowork_read(TLS_IO_INSTANCE* tls_io_instance)
 
 static void dowork_send(TLS_IO_INSTANCE* tls_io_instance)
 {
+    LogInfo("Dowork send");
     LIST_ITEM_HANDLE first_pending_io = singlylinkedlist_get_head_item(tls_io_instance->pending_transmission_list);
     if (first_pending_io != NULL)
     {
