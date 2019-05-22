@@ -470,7 +470,7 @@ static void dowork_send(TLS_IO_INSTANCE* tls_io_instance)
     if (first_pending_io != NULL)
     {
         PENDING_TRANSMISSION* pending_message = (PENDING_TRANSMISSION*)singlylinkedlist_item_get_value(first_pending_io);
-        LogInfo("%s: pending message %p, tls_io_instance %p", __FUNCTION__, pending_message, tls_io_instance);
+        LogInfo("%s: pending message %p (context %p), tls_io_instance %p", __FUNCTION__, pending_message, pending_message->callback_context, tls_io_instance);
         uint8_t* buffer = ((uint8_t*)pending_message->bytes) + pending_message->size - pending_message->unsent_size;
 
         CFStreamStatus send_status = CFWriteStreamGetStatus(tls_io_instance->sockWrite);

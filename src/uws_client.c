@@ -1376,7 +1376,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                                 /* Codes_SRS_UWS_CLIENT_01_214: [ Control frames (see Section 5.5) MAY be injected in the middle of a fragmented message. ]*/
                             case (unsigned char)WS_CLOSE_FRAME:
                             {
-                                LogInfo("Close frame received");
+                                LogInfo("%s: Close frame received", __FUNCTION__);
                                 uint16_t close_code;
                                 uint16_t* close_code_ptr;
                                 const unsigned char* data_ptr = uws_client->stream_buffer + needed_bytes - length;
@@ -1750,7 +1750,7 @@ int uws_client_close_async(UWS_CLIENT_HANDLE uws_client, ON_WS_CLOSE_COMPLETE on
             }
             else
             {
-                LogInfo("%s: freeing queue: %p", __FUNCTION__, uws_client);
+                LogInfo("%s: emptying queue: %p", __FUNCTION__, uws_client);
                 /* Codes_SRS_UWS_CLIENT_01_034: [ `uws_client_close_async` shall obtain all the pending send frames by repetitively querying for the head of the pending IO list and freeing that head item. ]*/
                 LIST_ITEM_HANDLE first_pending_send;
 
@@ -1845,9 +1845,8 @@ static void on_underlying_io_send_complete(void* context, IO_SEND_RESULT send_re
     }
     else
     {
-        LogInfo("%s: context: %p", __FUNCTION__, context);
+        LogInfo("%s: context: %p, send_result: %d", __FUNCTION__, context, send_result);
         LIST_ITEM_HANDLE ws_pending_send_list_item = (LIST_ITEM_HANDLE)context;
-        /* if (singlylinkedlist_find(uws_client->pending_sends, find_list_node, new_pending_send_list_item) != NULL) */
         WS_PENDING_SEND* ws_pending_send = (WS_PENDING_SEND*)singlylinkedlist_item_get_value(ws_pending_send_list_item);
         if (ws_pending_send == NULL)
         {
@@ -1990,7 +1989,8 @@ int uws_client_send_frame_async(UWS_CLIENT_HANDLE uws_client, unsigned char fram
                         /* Codes_SRS_UWS_CLIENT_09_001: [ If `xio_send` fails and the message is still queued, it shall be de-queued and destroyed. ] */
                         if (singlylinkedlist_find(uws_client->pending_sends, find_list_node, new_pending_send_list_item) != NULL)
                         {
-                            // Guards against double free in case the underlying I/O invoked 'on_underlying_io_send_complete' within xio_send.
+                            // Guards against double free in case the underlying I/O invoked 'on_underlying_io_send_complete' within xio_send,
+                            // in which the message is already removed from the list and freed.
                             (void)singlylinkedlist_remove(uws_client->pending_sends, new_pending_send_list_item);
                             free(ws_pending_send);
                         }
