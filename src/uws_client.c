@@ -252,7 +252,6 @@ UWS_CLIENT_HANDLE uws_client_create(const char* hostname, unsigned int port, con
                             }
                             else
                             {
-                                LogError("Initializing with closed uws state.");
                                 result->uws_state = UWS_STATE_CLOSED;
                                 /* Codes_SRS_UWS_CLIENT_01_403: [ The argument `port` shall be copied for later use. ]*/
                                 result->port = port;
