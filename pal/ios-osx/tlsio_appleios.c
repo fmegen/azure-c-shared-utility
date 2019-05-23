@@ -113,7 +113,6 @@ static bool process_and_destroy_head_message(TLS_IO_INSTANCE* tls_io_instance, I
     if (head_pending_io != NULL)
     {
         PENDING_TRANSMISSION* head_message = (PENDING_TRANSMISSION*)singlylinkedlist_item_get_value(head_pending_io);
-        LogInfo("%s: head_message %p (item %p, context %p), tls_io_instance %p, send_result %d", __FUNCTION__, head_message, head_pending_io, head_message->callback_context, tls_io_instance, send_result);
 
         if (singlylinkedlist_remove(tls_io_instance->pending_transmission_list, head_pending_io) != 0)
         {
@@ -363,7 +362,6 @@ static int tlsio_appleios_close_async(CONCRETE_IO_HANDLE tls_io, ON_IO_CLOSE_COM
 {
     int result;
 
-    LogInfo("%s: tlsio_appleios_close has completed.", __FUNCTION__);
     if (tls_io == NULL)
     {
         /* Codes_SRS_TLSIO_30_050: [ If the tlsio_handle parameter is NULL, tlsio_appleios_close_async shall log an error and return FAILURE. ]*/
@@ -403,7 +401,6 @@ static int tlsio_appleios_close_async(CONCRETE_IO_HANDLE tls_io, ON_IO_CLOSE_COM
             /* Codes_SRS_TLSIO_30_052: [ On success tlsio_close shall return 0. ]*/
             internal_close(tls_io_instance);
             on_io_close_complete(callback_context);
-            LogInfo("tlsio_appleios_close has completed.");
             result = 0;
         }
     }
@@ -470,7 +467,6 @@ static void dowork_send(TLS_IO_INSTANCE* tls_io_instance)
     if (first_pending_io != NULL)
     {
         PENDING_TRANSMISSION* pending_message = (PENDING_TRANSMISSION*)singlylinkedlist_item_get_value(first_pending_io);
-        LogInfo("%s: pending message %p (context %p), tls_io_instance %p", __FUNCTION__, pending_message, pending_message->callback_context, tls_io_instance);
         uint8_t* buffer = ((uint8_t*)pending_message->bytes) + pending_message->size - pending_message->unsent_size;
 
         CFStreamStatus send_status = CFWriteStreamGetStatus(tls_io_instance->sockWrite);
@@ -744,7 +740,6 @@ static int tlsio_appleios_send_async(CONCRETE_IO_HANDLE tls_io, const void* buff
                     else
                     {
                         /* Codes_SRS_TLSIO_30_063: [ On success,  tlsio_send  shall enqueue for transmission the  on_send_complete , the  callback_context , the  size , and the contents of  buffer  and then return 0. ]*/
-                        LogInfo("%s: added pending_transmission %p (ctx: %p) to q of tls_io_instance %p", __FUNCTION__, pending_transmission,  pending_transmission->callback_context, tls_io_instance);
                         result = 0;
                         dowork_send(tls_io_instance);
                     }
