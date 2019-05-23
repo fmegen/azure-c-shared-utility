@@ -586,7 +586,6 @@ static void indicate_ws_open_complete_error_and_close(UWS_CLIENT_INSTANCE* uws_c
 
 static void indicate_ws_error(UWS_CLIENT_INSTANCE* uws_client, WS_ERROR error_code)
 {
-    LogInfo("%s", __FUNCTION__);
     uws_client->uws_state = UWS_STATE_ERROR;
     clear_pending_sends(uws_client);
     uws_client->on_ws_error(uws_client->on_ws_error_context, error_code);
@@ -594,7 +593,6 @@ static void indicate_ws_error(UWS_CLIENT_INSTANCE* uws_client, WS_ERROR error_co
 
 static void indicate_ws_close_complete(UWS_CLIENT_INSTANCE* uws_client)
 {
-    LogInfo("%s", __FUNCTION__);
     uws_client->uws_state = UWS_STATE_CLOSED;
     clear_pending_sends(uws_client);
 
@@ -610,14 +608,12 @@ static void indicate_ws_close_complete(UWS_CLIENT_INSTANCE* uws_client)
 // the state machine.
 static void unchecked_on_send_complete(void* context, IO_SEND_RESULT send_result)
 {
-    LogInfo("%s", __FUNCTION__);
     (void)context;
     (void)send_result;
 }
 
 static int send_close_frame(UWS_CLIENT_INSTANCE* uws_client, unsigned int close_error_code)
 {
-    LogInfo("%s", __FUNCTION__);
     unsigned char* close_frame;
     unsigned char close_frame_payload[2];
     size_t close_frame_length;
@@ -658,7 +654,6 @@ static int send_close_frame(UWS_CLIENT_INSTANCE* uws_client, unsigned int close_
 
 static void indicate_ws_error_and_close(UWS_CLIENT_INSTANCE* uws_client, WS_ERROR error_code, unsigned int close_error_code)
 {
-    LogInfo("%s", __FUNCTION__);
     uws_client->uws_state = UWS_STATE_ERROR;
 
     (void)send_close_frame(uws_client, close_error_code);
@@ -668,7 +663,6 @@ static void indicate_ws_error_and_close(UWS_CLIENT_INSTANCE* uws_client, WS_ERRO
 
 static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILED io_open_result_detailed)
 {
-    LogInfo("%s", __FUNCTION__);
     UWS_CLIENT_HANDLE uws_client = (UWS_CLIENT_HANDLE)context;
     WS_OPEN_RESULT_DETAILED ws_open_result = { WS_OPEN_OK, 0 };
     IO_OPEN_RESULT open_result = io_open_result_detailed.result;
@@ -1704,7 +1698,6 @@ static int complete_send_frame(WS_PENDING_SEND* ws_pending_send, LIST_ITEM_HANDL
         }
 
         /* Codes_SRS_UWS_CLIENT_01_434: [ The memory associated with the sent frame shall be freed. ]*/
-        LogInfo("%s: removing item %p from queue & freeing", __FUNCTION__, pending_send_frame_item);
         free(ws_pending_send);
 
         result = 0;
@@ -1717,7 +1710,6 @@ static int complete_send_frame(WS_PENDING_SEND* ws_pending_send, LIST_ITEM_HANDL
 /* Codes_SRS_UWS_CLIENT_01_317: [ Clients SHOULD NOT close the WebSocket connection arbitrarily. ]*/
 int uws_client_close_async(UWS_CLIENT_HANDLE uws_client, ON_WS_CLOSE_COMPLETE on_ws_close_complete, void* on_ws_close_complete_context)
 {
-    LogInfo("%s: uws_client: %p, on_ws_complete: %p", __FUNCTION__, uws_client, on_ws_close_complete);
     int result;
 
     /* Codes_SRS_UWS_CLIENT_01_397: [ The `on_ws_close_complete` argument shall be allowed to be NULL, in which case no callback shall be called when the close is complete. ]*/
@@ -1725,7 +1717,7 @@ int uws_client_close_async(UWS_CLIENT_HANDLE uws_client, ON_WS_CLOSE_COMPLETE on
     if (uws_client == NULL)
     {
         /* Codes_SRS_UWS_CLIENT_01_030: [ if `uws_client` is NULL, `uws_client_close_async` shall return a non-zero value. ]*/
-        LogError("NULL UWS handle.");
+        LogError("NULL uWS handle.");
         result = __FAILURE__;
     }
     else
@@ -1738,7 +1730,6 @@ int uws_client_close_async(UWS_CLIENT_HANDLE uws_client, ON_WS_CLOSE_COMPLETE on
         }
         else
         {
-            LogInfo("%s: closing: %p", __FUNCTION__, uws_client);
             /* Codes_SRS_UWS_CLIENT_01_399: [ `on_ws_close_complete` and `on_ws_close_complete_context` shall be saved and the callback `on_ws_close_complete` shall be triggered when the close is complete. ]*/
             uws_client->on_ws_close_complete = on_ws_close_complete;
             uws_client->on_ws_close_complete_context = on_ws_close_complete_context;
@@ -1769,7 +1760,6 @@ int uws_client_close_async(UWS_CLIENT_HANDLE uws_client, ON_WS_CLOSE_COMPLETE on
 int uws_client_close_handshake_async(UWS_CLIENT_HANDLE uws_client, uint16_t close_code, const char* close_reason, ON_WS_CLOSE_COMPLETE on_ws_close_complete, void* on_ws_close_complete_context)
 {
     int result;
-    LogInfo("%s: uws_client: %p, on_ws_complete: %p", __FUNCTION__, uws_client, on_ws_close_complete);
 
     if (uws_client == NULL)
     {
@@ -1828,7 +1818,6 @@ static void on_underlying_io_send_complete(void* context, IO_SEND_RESULT send_re
     }
     else
     {
-        LogInfo("%s: context: %p, send_result: %d", __FUNCTION__, context, send_result);
         LIST_ITEM_HANDLE ws_pending_send_list_item = (LIST_ITEM_HANDLE)context;
         WS_PENDING_SEND* ws_pending_send = (WS_PENDING_SEND*)singlylinkedlist_item_get_value(ws_pending_send_list_item);
         if (ws_pending_send == NULL)
