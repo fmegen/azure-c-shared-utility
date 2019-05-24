@@ -418,6 +418,12 @@ char* CFStringCopyUTF8String(CFStringRef aString) {
     CFIndex length = CFStringGetLength(aString);
     CFIndex maxSize = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8) + 1;
     char *buffer = (char *)malloc(maxSize);
+    if (buffer == NULL)
+    {
+        LogError("%s: Can not format error message", __FUNCTION__);
+        return NULL;
+    }
+
     if (CFStringGetCString(aString, buffer, maxSize, kCFStringEncodingUTF8))
     {
         return buffer;
