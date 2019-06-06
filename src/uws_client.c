@@ -586,7 +586,6 @@ static void indicate_ws_open_complete_error_and_close(UWS_CLIENT_INSTANCE* uws_c
 static void indicate_ws_error(UWS_CLIENT_INSTANCE* uws_client, WS_ERROR error_code)
 {
     uws_client->uws_state = UWS_STATE_ERROR;
-    clear_pending_sends(uws_client);
     uws_client->on_ws_error(uws_client->on_ws_error_context, error_code);
 }
 
