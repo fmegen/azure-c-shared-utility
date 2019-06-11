@@ -1715,7 +1715,7 @@ int uws_client_close_async(UWS_CLIENT_HANDLE uws_client, ON_WS_CLOSE_COMPLETE on
     if (uws_client == NULL)
     {
         /* Codes_SRS_UWS_CLIENT_01_030: [ if `uws_client` is NULL, `uws_client_close_async` shall return a non-zero value. ]*/
-        LogError("NULL uWS handle.");
+        LogError("%s: NULL uWS handle.", __FUNCTION__);
         result = __FAILURE__;
     }
     else
@@ -1746,6 +1746,7 @@ int uws_client_close_async(UWS_CLIENT_HANDLE uws_client, ON_WS_CLOSE_COMPLETE on
             else
             {
                 /* Codes_SRS_UWS_CLIENT_01_396: [ On success `uws_client_close_async` shall return 0. ]*/
+                LogInfo("%s: closed underlying io.", __FUNCTION__);
                 result = 0;
             }
         }
