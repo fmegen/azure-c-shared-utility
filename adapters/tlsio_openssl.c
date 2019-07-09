@@ -734,6 +734,7 @@ static void on_underlying_io_close_complete(void* context)
         break;
 
     case TLSIO_STATE_CLOSING:
+        LogInfo("Closing tlsio instance complete.");
         tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
 
         if (tls_io_instance->on_io_close_complete != NULL)
@@ -2335,6 +2336,8 @@ int tlsio_openssl_close(CONCRETE_IO_HANDLE tls_io, ON_IO_CLOSE_COMPLETE on_io_cl
         {
             // Attempt a graceful shutdown
             /* Codes_SRS_TLSIO_30_056: [ On success the adapter shall enter TLSIO_STATE_EX_CLOSING. ]*/
+            LogInfo("Closing tlsio instance...");
+
             tls_io_instance->tlsio_state = TLSIO_STATE_CLOSING;
             tls_io_instance->on_io_close_complete = on_io_close_complete;
             tls_io_instance->on_io_close_complete_context = callback_context;
@@ -2342,6 +2345,7 @@ int tlsio_openssl_close(CONCRETE_IO_HANDLE tls_io, ON_IO_CLOSE_COMPLETE on_io_cl
             // transition into TLSIO_STATE_NOT_OPEN
             if (xio_close(tls_io_instance->underlying_io, on_underlying_io_close_complete, tls_io_instance) != 0)
             {
+                LogInfo("Closed tlsio instance.");
                 close_openssl_instance(tls_io_instance);
                 tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
             }
@@ -2352,6 +2356,7 @@ int tlsio_openssl_close(CONCRETE_IO_HANDLE tls_io, ON_IO_CLOSE_COMPLETE on_io_cl
             /* Codes_SRS_TLSIO_30_056: [ On success the adapter shall enter TLSIO_STATE_EX_CLOSING. ]*/
             /* Codes_SRS_TLSIO_30_051: [ On success, if the underlying TLS does not support asynchronous closing or if the adapter is not in TLSIO_STATE_EXT_OPEN, then the adapter shall enter TLSIO_STATE_EXT_CLOSED immediately after entering TLSIO_STATE_EXT_CLOSING. ]*/
             // Current implementations of xio_close will fail if not in the open state, but we don't care
+            LogError("FORCE-Closing tlsio instance.");
             (void)xio_close(tls_io_instance->underlying_io, NULL, NULL);
             close_openssl_instance(tls_io_instance);
             tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
