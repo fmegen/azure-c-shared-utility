@@ -2107,7 +2107,9 @@ void tlsio_openssl_deinit(void)
 
     openssl_dynamic_locks_uninstall();
     openssl_static_locks_uninstall();
+#ifndef __APPLE__
     FIPS_mode_set(0);
+#endif
     CRYPTO_set_locking_callback(NULL);
     CRYPTO_set_id_callback(NULL); // TODO already deprecated in 1.0.0 ?
     ERR_free_strings();
