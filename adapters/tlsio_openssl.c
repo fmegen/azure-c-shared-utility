@@ -764,10 +764,17 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
         else
         {
             tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
+            LogError("Could not open underlying IO: %d", open_result);
             open_result_detailed.result = IO_OPEN_ERROR;
-            LogError("Invalid tlsio_state. Expected state is TLSIO_STATE_OPENING_UNDERLYING_IO.");
             indicate_open_complete(tls_io_instance, open_result_detailed);
         }
+    }
+    else
+    {
+        LogError("Invalid tlsio_state %d. Expected state is TLSIO_STATE_OPENING_UNDERLYING_IO.", tls_io_instance->tlsio_state);
+        tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
+        open_result_detailed.result = IO_OPEN_ERROR;
+        indicate_open_complete(tls_io_instance, open_result_detailed);
     }
 }
 
@@ -800,11 +807,11 @@ static int decode_ssl_received_bytes(TLS_IO_INSTANCE* tls_io_instance)
 
     int rcv_bytes = 1;
 
-    while (rcv_bytes > 0)
+    while (rcv_bytes > 0 && tls_io_instance->tlsio_state == TLSIO_STATE_OPEN)
     {
         if (tls_io_instance->ssl == NULL)
         {
-            LogError("SSL channel closed in decode_ssl_received_bytes.");
+            LogError("SSL channel closed in decode_ssl_received_bytes while tlsio state is %d.", tls_io_instance->tlsio_state);
             result = __FAILURE__;
             return result;
         }
