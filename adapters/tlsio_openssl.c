@@ -959,7 +959,7 @@ static int load_cert_crl_http(
         BIO_flush(bioPlain);
 
         char* realmBase64;
-        int length = BIO_get_mem_data(bioBase64, &realmBase64);
+        long length = BIO_get_mem_data(bioBase64, &realmBase64);
 
         sprintf_s(authData, sizeof(authData), "Basic %.*s", length, realmBase64);
 
@@ -1824,7 +1824,7 @@ static int setup_crl_check(TLS_IO_INSTANCE* tls_io_instance)
 #if USE_OPENSSL_1_1_0_OR_UP
     int flags = X509_VERIFY_PARAM_get_flags(X509_STORE_get0_param(store));
 #else
-    int flags = X509_VERIFY_PARAM_get_flags(store->param);
+    long flags = X509_VERIFY_PARAM_get_flags(store->param);
 #endif
     if (flags & X509_V_FLAG_CRL_CHECK)
     {
