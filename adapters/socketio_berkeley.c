@@ -629,7 +629,6 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
 
                 sprintf(portString, "%u", socket_io_instance->port);
                 int err = getaddrinfo(socket_io_instance->hostname, portString, &addrHint, &addrInfo);
-                LogInfo("%s: Connecting to %s:%s -> %d.", __FUNCTION__, socket_io_instance->hostname, portString, err);
                 if (err != 0)
                 {
                     LogError("Failure: getaddrinfo failure %d.", err);
