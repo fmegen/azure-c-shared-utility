@@ -841,7 +841,7 @@ HTTPAPI_RESULT HTTPAPI_SetOption(HTTP_HANDLE handle, const char* optionName, con
             }
             else
             {
-                if (sprintf_s(proxyAddressAndPort, MAX_HOSTNAME_LEN, "%s:%d", proxy_data->host_address, proxy_data->port) <= 0)
+                if (azure_c_shared_utility_sprintf_s(proxyAddressAndPort, MAX_HOSTNAME_LEN, "%s:%d", proxy_data->host_address, proxy_data->port) <= 0)
                 {
                     LogError("failure constructing proxy address");
                     result = HTTPAPI_ERROR;

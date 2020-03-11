@@ -121,7 +121,7 @@ static const unsigned int interestingUnsignedIntNumbersToBeConverted[] =
     1234,
     12341,
     UINT_MAX / 2,
-    UINT_MAX -1, 
+    UINT_MAX -1,
     UINT_MAX,
     42,
     0x42
@@ -156,7 +156,7 @@ static const size_t interestingSize_tNumbersToBeConverted[] =
     1234,
     12341,
     SIZE_MAX / 2,
-    SIZE_MAX -1, 
+    SIZE_MAX -1,
     SIZE_MAX,
     42,
     0x42
@@ -191,11 +191,11 @@ TEST_SUITE_CLEANUP(b)
     TEST_DEINITIALIZE_MEMORY_DEBUG(g_dllByDll);
 }
 
-        /* strcat_s */
+        /* azure_c_shared_utility_strcat_s */
 
-        // Tests_SRS_CRT_ABSTRACTIONS_99_008: [strcat_s shall append the src to dst and terminates the resulting string with a null character.]
+        // Tests_SRS_CRT_ABSTRACTIONS_99_008: [azure_c_shared_utility_strcat_s shall append the src to dst and terminates the resulting string with a null character.]
         // Tests_SRS_CRT_ABSTRACTIONS_99_009: [The initial character of src shall overwrite the terminating null character of dst.]
-        // Tests_SRS_CRT_ABSTRACTIONS_99_003: [strcat_s shall return Zero upon success.]
+        // Tests_SRS_CRT_ABSTRACTIONS_99_003: [azure_c_shared_utility_strcat_s shall return Zero upon success.]
         TEST_FUNCTION(strcat_s_Appends_Source_To_Destination)
         {
             // arrange
@@ -205,7 +205,7 @@ TEST_SUITE_CLEANUP(b)
             int result;
 
             // act
-            result = strcat_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcat_s(dstString, dstSizeInBytes, srcString);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "DestinationSource", dstString);
@@ -221,7 +221,7 @@ TEST_SUITE_CLEANUP(b)
             int result;
 
             // act
-            result = strcat_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcat_s(dstString, dstSizeInBytes, srcString);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "Destination", dstString);
@@ -237,7 +237,7 @@ TEST_SUITE_CLEANUP(b)
             int result;
 
             // act
-            result = strcat_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcat_s(dstString, dstSizeInBytes, srcString);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "Source", dstString);
@@ -253,7 +253,7 @@ TEST_SUITE_CLEANUP(b)
             int result;
 
             // act
-            result = strcat_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcat_s(dstString, dstSizeInBytes, srcString);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "", dstString);
@@ -274,7 +274,7 @@ TEST_SUITE_CLEANUP(b)
 #ifdef _MSC_VER
 #pragma warning(suppress: 6387) /* This is test code, explictly calling with NULL argument */
 #endif
-            result = strcat_s(dstString, sizeInBytes, srcString);
+            result = azure_c_shared_utility_strcat_s(dstString, sizeInBytes, srcString);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -297,7 +297,7 @@ TEST_SUITE_CLEANUP(b)
 
             // act
             HOOK_INVALID_PARAMETER_HANDLER();
-            result = strcat_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcat_s(dstString, dstSizeInBytes, srcString);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -309,7 +309,7 @@ TEST_SUITE_CLEANUP(b)
 #endif
             ASSERT_ARE_EQUAL(int, EINVAL, result);
         }
-        
+
         // Tests_SRS_CRT_ABSTRACTIONS_99_005: [If src is NULL, the error code returned shall be EINVAL and dst[0] shall be set to 0.]
         TEST_FUNCTION(strcat_s_With_NULL_Source_Fails)
         {
@@ -324,7 +324,7 @@ TEST_SUITE_CLEANUP(b)
 #ifdef _MSC_VER
 #pragma warning(suppress: 6387) /* This is test code, explictly calling with NULL argument */
 #endif
-            result = strcat_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcat_s(dstString, dstSizeInBytes, srcString);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -344,7 +344,7 @@ TEST_SUITE_CLEANUP(b)
             // act
             dstSizeInBytes = 0;
             HOOK_INVALID_PARAMETER_HANDLER();
-            result = strcat_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcat_s(dstString, dstSizeInBytes, srcString);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -368,7 +368,7 @@ TEST_SUITE_CLEANUP(b)
             // act
             HOOK_INVALID_PARAMETER_HANDLER();
             dstSizeInBytes = strlen(dstString) + (strlen(srcString) - 3);
-            result = strcat_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcat_s(dstString, dstSizeInBytes, srcString);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -376,10 +376,10 @@ TEST_SUITE_CLEANUP(b)
             ASSERT_ARE_EQUAL(int, ERANGE, result);
         }
 
-        /* strcpy_s */
+        /* azure_c_shared_utility_strcpy_s */
 
-        // Tests_SRS_CRT_ABSTRACTIONS_99_016: [strcpy_s shall copy the contents in the address of src, including the terminating null character, to the location that's specified by dst.]
-        // Tests_SRS_CRT_ABSTRACTIONS_99_011 : [strcpy_s shall return Zero upon success]
+        // Tests_SRS_CRT_ABSTRACTIONS_99_016: [azure_c_shared_utility_strcpy_s shall copy the contents in the address of src, including the terminating null character, to the location that's specified by dst.]
+        // Tests_SRS_CRT_ABSTRACTIONS_99_011 : [azure_c_shared_utility_strcpy_s shall return Zero upon success]
         TEST_FUNCTION(strcpy_s_copies_Source_into_Destination)
         {
             // arrange
@@ -389,7 +389,7 @@ TEST_SUITE_CLEANUP(b)
             int result = 0;
 
             // act
-            result = strcpy_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcpy_s(dstString, dstSizeInBytes, srcString);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "Source", dstString);
@@ -405,7 +405,7 @@ TEST_SUITE_CLEANUP(b)
             int result = 0;
 
             // act
-            result = strcpy_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcpy_s(dstString, dstSizeInBytes, srcString);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "", dstString);
@@ -421,7 +421,7 @@ TEST_SUITE_CLEANUP(b)
             int result = 0;
 
             // act
-            result = strcpy_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcpy_s(dstString, dstSizeInBytes, srcString);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "Source", dstString);
@@ -437,7 +437,7 @@ TEST_SUITE_CLEANUP(b)
             int result = 0;
 
             // act
-            result = strcpy_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcpy_s(dstString, dstSizeInBytes, srcString);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "", dstString);
@@ -458,7 +458,7 @@ TEST_SUITE_CLEANUP(b)
 #ifdef _MSC_VER
 #pragma warning(suppress: 6387) /* This is test code, explictly calling with NULL argument */
 #endif
-            result = strcpy_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcpy_s(dstString, dstSizeInBytes, srcString);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -480,7 +480,7 @@ TEST_SUITE_CLEANUP(b)
 #ifdef _MSC_VER
 #pragma warning(suppress: 6387) /* This is test code, explictly calling with NULL argument */
 #endif
-            result = strcpy_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcpy_s(dstString, dstSizeInBytes, srcString);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -500,7 +500,7 @@ TEST_SUITE_CLEANUP(b)
             // act
             dstSizeInBytes = 0;
             HOOK_INVALID_PARAMETER_HANDLER();
-            result = strcpy_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcpy_s(dstString, dstSizeInBytes, srcString);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -524,7 +524,7 @@ TEST_SUITE_CLEANUP(b)
             // act
             HOOK_INVALID_PARAMETER_HANDLER();
             dstSizeInBytes = sizeof(srcString) - 2;
-            result = strcpy_s(dstString, dstSizeInBytes, srcString);
+            result = azure_c_shared_utility_strcpy_s(dstString, dstSizeInBytes, srcString);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -532,11 +532,11 @@ TEST_SUITE_CLEANUP(b)
             ASSERT_ARE_EQUAL(int, ERANGE, result);
         }
 
-        /* strncpy_s */
+        /* azure_c_shared_utility_strncpy_s */
 
-        // Tests_SRS_CRT_ABSTRACTIONS_99_025 : [strncpy_s shall copy the first N characters of src to dst, where N is the lesser of MaxCount and the length of src.]
+        // Tests_SRS_CRT_ABSTRACTIONS_99_025 : [azure_c_shared_utility_strncpy_s shall copy the first N characters of src to dst, where N is the lesser of MaxCount and the length of src.]
         // Tests_SRS_CRT_ABSTRACTIONS_99_041 : [If those N characters will fit within dst(whose size is given as dstSizeInBytes) and still leave room for a null terminator, then those characters shall be copied and a terminating null is appended; otherwise, strDest[0] is set to the null character and ERANGE error code returned per requirement below.]
-        // Tests_SRS_CRT_ABSTRACTIONS_99_018: [strncpy_s shall return Zero upon success]
+        // Tests_SRS_CRT_ABSTRACTIONS_99_018: [azure_c_shared_utility_strncpy_s shall return Zero upon success]
         TEST_FUNCTION(strncpy_s_copies_N_chars_of_source_to_destination_where_maxCount_equals_source_Length)
         {
             // arrange
@@ -547,7 +547,7 @@ TEST_SUITE_CLEANUP(b)
             int result;
 
             // act
-            result = strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
+            result = azure_c_shared_utility_strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "Source", dstString);
@@ -564,7 +564,7 @@ TEST_SUITE_CLEANUP(b)
             int result;
 
             // act
-            result = strncpy_s(dstString, dstSizeInBytes, srcString, maxCount+5);
+            result = azure_c_shared_utility_strncpy_s(dstString, dstSizeInBytes, srcString, maxCount+5);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "Source", dstString);
@@ -581,7 +581,7 @@ TEST_SUITE_CLEANUP(b)
             int result;
 
             // act
-            result = strncpy_s(dstString, dstSizeInBytes, srcString, maxCount - 3);
+            result = azure_c_shared_utility_strncpy_s(dstString, dstSizeInBytes, srcString, maxCount - 3);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "Sour", dstString);
@@ -600,7 +600,7 @@ TEST_SUITE_CLEANUP(b)
 
             // act
             maxCount = _TRUNCATE;
-            result = strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
+            result = azure_c_shared_utility_strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "Source", dstString);
@@ -620,7 +620,7 @@ TEST_SUITE_CLEANUP(b)
 
             // act
             maxCount = _TRUNCATE;
-            result = strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
+            result = azure_c_shared_utility_strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, "Sour", dstString);
@@ -642,7 +642,7 @@ TEST_SUITE_CLEANUP(b)
 #ifdef _MSC_VER
 #pragma warning(suppress: 6387) /* This is test code, explictly calling with NULL argument */
 #endif
-            result = strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
+            result = azure_c_shared_utility_strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -665,7 +665,7 @@ TEST_SUITE_CLEANUP(b)
 #ifdef _MSC_VER
 #pragma warning(suppress: 6387) /* This is test code, explictly calling with NULL argument */
 #endif
-            result = strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
+            result = azure_c_shared_utility_strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -686,7 +686,7 @@ TEST_SUITE_CLEANUP(b)
             // act
             HOOK_INVALID_PARAMETER_HANDLER();
             dstSizeInBytes = 0;
-            result = strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
+            result = azure_c_shared_utility_strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -706,7 +706,7 @@ TEST_SUITE_CLEANUP(b)
 
             // act
             HOOK_INVALID_PARAMETER_HANDLER();
-            result = strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
+            result = azure_c_shared_utility_strncpy_s(dstString, dstSizeInBytes, srcString, maxCount);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -714,7 +714,7 @@ TEST_SUITE_CLEANUP(b)
             ASSERT_ARE_EQUAL(int, ERANGE, result);
         }
 
-        /* sprintf_s */
+        /* azure_c_shared_utility_sprintf_s */
 
         // Tests_SRS_CRT_ABSTRACTIONS_99_029: [The sprintf_s function shall format and store series of characters and values in dst.Each argument(if any) is converted and output according to the corresponding Format Specification in the format variable.]
         // Tests_SRS_CRT_ABSTRACTIONS_99_031: [A null character is appended after the last character written.]
@@ -729,7 +729,7 @@ TEST_SUITE_CLEANUP(b)
             int result;
 
             // act
-            result = sprintf_s(dstString, dstSizeInBytes, "sprintf_s: %d, %s, %c, %3.1f", 123, "hello", 'Z', 1.5f);
+            result = azure_c_shared_utility_sprintf_s(dstString, dstSizeInBytes, "sprintf_s: %d, %s, %c, %3.1f", 123, "hello", 'Z', 1.5f);
 
             // assert
             ASSERT_ARE_EQUAL(char_ptr, expected_string, dstString);
@@ -749,7 +749,7 @@ TEST_SUITE_CLEANUP(b)
 #ifdef _MSC_VER
 #pragma warning(suppress: 6387) /* This is test code, explictly calling with NULL argument */
 #endif
-            result = sprintf_s(dstString, dstSizeInBytes, "sprintf_s: %d, %s, %c, %3.1f", 123, "hello", 'Z', 1.5f);
+            result = azure_c_shared_utility_sprintf_s(dstString, dstSizeInBytes, "sprintf_s: %d, %s, %c, %3.1f", 123, "hello", 'Z', 1.5f);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -769,7 +769,7 @@ TEST_SUITE_CLEANUP(b)
 #ifdef _MSC_VER
 #pragma warning(suppress: 6387) /* This is test code, explictly calling with NULL argument */
 #endif
-            result = sprintf_s(dstString, dstSizeInBytes, NULL);
+            result = azure_c_shared_utility_sprintf_s(dstString, dstSizeInBytes, NULL);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -787,7 +787,7 @@ TEST_SUITE_CLEANUP(b)
 
             // act
             HOOK_INVALID_PARAMETER_HANDLER();
-            result = sprintf_s(dstString, dstSizeInBytes, "sprintf_s: %d, %s, %c, %3.1f", 123, "hello", 'Z', 1.5f);
+            result = azure_c_shared_utility_sprintf_s(dstString, dstSizeInBytes, "sprintf_s: %d, %s, %c, %3.1f", 123, "hello", 'Z', 1.5f);
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -804,7 +804,7 @@ TEST_SUITE_CLEANUP(b)
 
             // act
             HOOK_INVALID_PARAMETER_HANDLER();
-            result = sprintf_s(dstString, dstSizeInBytes, "12345");
+            result = azure_c_shared_utility_sprintf_s(dstString, dstSizeInBytes, "12345");
             UNHOOK_INVALID_PARAMETER_HANDLER();
 
             // assert
@@ -1396,7 +1396,7 @@ TEST_SUITE_CLEANUP(b)
 
             // act
             result = strtoull_s(subjectStr, &endptr, base);
- 
+
             // assert
             ASSERT_ARE_EQUAL(uint64_t, expectedResult, result);
             ASSERT_ARE_EQUAL(void_ptr, expectedEndptr, endptr);
@@ -2453,7 +2453,7 @@ TEST_SUITE_CLEANUP(b)
 
             ///assert
             ASSERT_ARE_NOT_EQUAL(int, 0, result);
-            
+
         }
 
         /*Tests_SRS_CRT_ABSTRACTIONS_02_002: [If the conversion fails for any reason (for example, insufficient buffer space), a non-zero return value shall be supplied and unsignedIntToString shall fail.] */
@@ -2511,7 +2511,7 @@ TEST_SUITE_CLEANUP(b)
 
                 ///assert
                 ASSERT_ARE_EQUAL(int, 0, result);
-                
+
                 while (destination[pos] != '\0')
                 {
                     if (valueFromString > (UINT_MAX / 10))

@@ -69,7 +69,7 @@ template <> class valueHolder <pVoidFunction>
 {
 private:
     pVoidFunction theValue;
-    
+
 public:
     valueHolder(pVoidFunction t)
     {
@@ -80,7 +80,7 @@ public:
     {
         theValue = t;
     }
-    
+
     operator pVoidFunction()
     {
         return theValue;
@@ -158,7 +158,7 @@ DECLARE_STIM_STATIC_TD_METHOD_1(,void, takes1int_2, _In_ int, i);
 
 TD_MOCK_CLASS(MyMocks3)
 {
-public: 
+public:
     STIM_STATIC_TD_METHOD_0(,void, zero);
     STIM_STATIC_TD_METHOD_0(,int, izero);
     STIM_STATIC_TD_METHOD_1(,int, one, _In_ int, i);
@@ -189,7 +189,7 @@ public:
     MOCK_STATIC_TD_METHOD_4(, int, whenfour, _In_ unsigned short int, si, _In_ char, c, _In_ pChar, s, _In_ int, i);
     MOCK_METHOD_END(int, 0)
 
-    MOCK_STATIC_TD_METHOD_5(, int, whenfive, _In_ pVoidFunction, pVoid, _In_ unsigned short int, si, _In_ char, c, _In_ pChar, s, _In_ int, i);    
+    MOCK_STATIC_TD_METHOD_5(, int, whenfive, _In_ pVoidFunction, pVoid, _In_ unsigned short int, si, _In_ char, c, _In_ pChar, s, _In_ int, i);
     MOCK_METHOD_END(int, 0)
 
     MOCK_STATIC_TD_METHOD_6(,int, whensix, _In_ char, c1, _In_ char, c2, _In_ char, c3, _In_ char, c4, _In_ char, c5, _In_ char, c6);
@@ -247,7 +247,7 @@ void STIM_FunctionThatTakesAInt(_In_ int a)
     }
 }
 
-int g_STIM_FunctionThatTakesAnArray[2][10]; 
+int g_STIM_FunctionThatTakesAnArray[2][10];
 bool g_STIM_FunctionThatTakesAnArrayWasParameterNULL=false;
 int g_STIM_FunctionThatTakesAnArrayNParameters=0;
 int g_STIM_FunctionThatTakesAnArray_nCalls=0;
@@ -264,7 +264,7 @@ void STIM_FunctionThatTakesAnArray(_In_reads_opt_(g_STIM_FunctionThatTakesAnArra
         {
             for(int i=0;i<g_STIM_FunctionThatTakesAnArrayNParameters;i++)
             {
-                
+
                 g_STIM_FunctionThatTakesAnArray[g_STIM_FunctionThatTakesAnArray_nCalls][i]=array[i];
             }
             g_STIM_FunctionThatTakesAnArray_nCalls++;
@@ -276,7 +276,7 @@ void STIM_FunctionThatTakesAnArray(_In_reads_opt_(g_STIM_FunctionThatTakesAnArra
     }
 }
 
-int g_STIM_FunctionThatTakesAConstArray[2][10]; 
+int g_STIM_FunctionThatTakesAConstArray[2][10];
 bool g_STIM_FunctionThatTakesAConstArrayWasParameterNULL=false;
 int g_STIM_FunctionThatTakesAConstArrayNParameters=0;
 int g_STIM_FunctionThatTakesAConstArray_nCalls=0;
@@ -293,7 +293,7 @@ void STIM_FunctionThatTakesAConstArray(_In_reads_opt_(g_STIM_FunctionThatTakesAC
         {
             for(int i=0;i<g_STIM_FunctionThatTakesAConstArrayNParameters;i++)
             {
-                
+
                 g_STIM_FunctionThatTakesAConstArray[g_STIM_FunctionThatTakesAConstArray_nCalls][i]=array[i];
             }
             g_STIM_FunctionThatTakesAConstArray_nCalls++;
@@ -378,12 +378,12 @@ public:
             }
             else
             {
-                strcpy_s(someChar, strLen+1, t.someChar);
+                azure_c_shared_utility_strcpy_s(someChar, strLen+1, t.someChar);
             }
         }
 
     }
-    
+
     //init constructor
     someSortOfT(tstring s, _In_opt_z_ char* p)
     {
@@ -402,7 +402,7 @@ public:
             }
             else
             {
-                strcpy_s(someChar, strLen+1, p);
+                azure_c_shared_utility_strcpy_s(someChar, strLen+1, p);
             }
         }
     }
@@ -416,7 +416,7 @@ public:
         else
         {
             someString = right.someString;
-            
+
             if(someChar!=NULL)
             {
                 free(someChar);
@@ -433,7 +433,7 @@ public:
                 }
                 else
                 {
-                    strcpy_s(someChar, strLen+1, right.someChar);
+                    azure_c_shared_utility_strcpy_s(someChar, strLen+1, right.someChar);
                 }
             }
 
@@ -523,7 +523,7 @@ namespace Microsoft
 }
 
 
-someSortOfT g_STIM_FunctionThatTakesAnArrayOfObjects[10][10]; 
+someSortOfT g_STIM_FunctionThatTakesAnArrayOfObjects[10][10];
 bool g_STIM_FunctionThatTakesAnArrayOfObjectsWasParameterNULL=false;
 int g_STIM_FunctionThatTakesAnArrayOfObjectsNParameters=2;
 int g_STIM_FunctionThatTakesAnArrayOfObjects_nCalls=0;
@@ -689,7 +689,7 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             ///arrange
             MyMocks3 mocks(theTask);
             posIndex=0;
-            
+
             STIM_CALL_AT(mocks, 0, takes1int_1(1));
             STIM_CALL_AT(mocks, 0, takes1int_2(2));
 
@@ -699,7 +699,7 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             ///assert
             ASSERT_ARE_EQUAL(int, 1, posRecorder[0]);
             ASSERT_ARE_EQUAL(int, 2, posRecorder[1]);
-            
+
         }
 
         TEST_FUNCTION(TimeDiscreteMicroMock_FileOrderIsPreserved_2)
@@ -854,7 +854,7 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             m.RunUntilTick(0);
 
             ///assert
-            ASSERT_ARE_EQUAL(int, 7, g_STIM_FunctionThatTakesAnArray[0][0]);        
+            ASSERT_ARE_EQUAL(int, 7, g_STIM_FunctionThatTakesAnArray[0][0]);
         }
 
         TEST_FUNCTION(TimeDiscreteMicroMock_ParameterBuffersAreSaved_understands_buffer_of_5_elements)
@@ -870,11 +870,11 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             m.RunUntilTick(0);
 
             ///assert
-            ASSERT_ARE_EQUAL(int, 1, g_STIM_FunctionThatTakesAnArray[0][0]);        
-            ASSERT_ARE_EQUAL(int, 2, g_STIM_FunctionThatTakesAnArray[0][1]);    
-            ASSERT_ARE_EQUAL(int, 3, g_STIM_FunctionThatTakesAnArray[0][2]);    
-            ASSERT_ARE_EQUAL(int, 4, g_STIM_FunctionThatTakesAnArray[0][3]);    
-            ASSERT_ARE_EQUAL(int, 5, g_STIM_FunctionThatTakesAnArray[0][4]);    
+            ASSERT_ARE_EQUAL(int, 1, g_STIM_FunctionThatTakesAnArray[0][0]);
+            ASSERT_ARE_EQUAL(int, 2, g_STIM_FunctionThatTakesAnArray[0][1]);
+            ASSERT_ARE_EQUAL(int, 3, g_STIM_FunctionThatTakesAnArray[0][2]);
+            ASSERT_ARE_EQUAL(int, 4, g_STIM_FunctionThatTakesAnArray[0][3]);
+            ASSERT_ARE_EQUAL(int, 5, g_STIM_FunctionThatTakesAnArray[0][4]);
         }
 
         TEST_FUNCTION(TimeDiscreteMicroMock_A_STIM_with_2buffers_still_works_NULL_NULL)
@@ -887,8 +887,8 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             m.RunUntilTick(0);
 
             ///assert
-            ASSERT_ARE_EQUAL(bool, true, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);        
-            ASSERT_ARE_EQUAL(bool, true, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);        
+            ASSERT_ARE_EQUAL(bool, true, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);
+            ASSERT_ARE_EQUAL(bool, true, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);
         }
 
         TEST_FUNCTION(TimeDiscreteMicroMock_A_STIM_with_2buffers_still_works_NULL_1int)
@@ -902,8 +902,8 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             m.RunUntilTick(0);
 
             //assert
-            ASSERT_ARE_EQUAL(bool, true, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);        
-            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);        
+            ASSERT_ARE_EQUAL(bool, true, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);
+            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);
             ASSERT_ARE_EQUAL(int, 2, STIM_FunctionThatTakesTwoArrays_array2_copy[0]);
         }
 
@@ -919,8 +919,8 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             m.RunUntilTick(0);
 
             ///assert
-            ASSERT_ARE_EQUAL(bool, true, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);        
-            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);        
+            ASSERT_ARE_EQUAL(bool, true, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);
+            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);
             ASSERT_ARE_EQUAL(int, 21, STIM_FunctionThatTakesTwoArrays_array2_copy[0]);
             ASSERT_ARE_EQUAL(int, 22, STIM_FunctionThatTakesTwoArrays_array2_copy[1]);
             ASSERT_ARE_EQUAL(int, 23, STIM_FunctionThatTakesTwoArrays_array2_copy[2]);
@@ -937,8 +937,8 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             m.RunUntilTick(0);
 
             ///assert
-            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);        
-            ASSERT_ARE_EQUAL(bool, true, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);        
+            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);
+            ASSERT_ARE_EQUAL(bool, true, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);
             ASSERT_ARE_EQUAL(int, 3, STIM_FunctionThatTakesTwoArrays_array1_copy[0]);
         }
 
@@ -954,8 +954,8 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             m.RunUntilTick(0);
 
             ///assert
-            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);        
-            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);        
+            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);
+            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);
             ASSERT_ARE_EQUAL(int, 11, STIM_FunctionThatTakesTwoArrays_array1_copy[0]);
             ASSERT_ARE_EQUAL(int, 22, STIM_FunctionThatTakesTwoArrays_array2_copy[0]);
         }
@@ -973,8 +973,8 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             m.RunUntilTick(0);
 
             ///assert
-            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);        
-            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);        
+            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);
+            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);
             ASSERT_ARE_EQUAL(int, 11, STIM_FunctionThatTakesTwoArrays_array1_copy[0]);
             ASSERT_ARE_EQUAL(int, 22, STIM_FunctionThatTakesTwoArrays_array2_copy[0]);
             ASSERT_ARE_EQUAL(int, 23, STIM_FunctionThatTakesTwoArrays_array2_copy[1]);
@@ -986,15 +986,15 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             ///arrange
             CMocksForParameterBuffers m(someTask);
             int v1[3]={11,13,15};
-            
+
             ///act
             STIM_CALL_AT(m, 0, STIM_FunctionThatTakesTwoArrays(v1, 3, NULL, 0))
                 .setArraySize(1,3);
             m.RunUntilTick(0);
 
             ///assert
-            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);        
-            ASSERT_ARE_EQUAL(bool, true, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);                    
+            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);
+            ASSERT_ARE_EQUAL(bool, true, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);
             ASSERT_ARE_EQUAL(int, 11, STIM_FunctionThatTakesTwoArrays_array1_copy[0]);
             ASSERT_ARE_EQUAL(int, 13, STIM_FunctionThatTakesTwoArrays_array1_copy[1]);
             ASSERT_ARE_EQUAL(int, 15, STIM_FunctionThatTakesTwoArrays_array1_copy[2]);
@@ -1013,8 +1013,8 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             m.RunUntilTick(0);
 
             ///assert
-            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);        
-            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);                    
+            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);
+            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);
             ASSERT_ARE_EQUAL(int, 11, STIM_FunctionThatTakesTwoArrays_array1_copy[0]);
             ASSERT_ARE_EQUAL(int, 13, STIM_FunctionThatTakesTwoArrays_array1_copy[1]);
             ASSERT_ARE_EQUAL(int, 15, STIM_FunctionThatTakesTwoArrays_array1_copy[2]);
@@ -1035,8 +1035,8 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             m.RunUntilTick(0);
 
             ///assert
-            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);        
-            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);                    
+            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array1_called_pointer);
+            ASSERT_ARE_EQUAL(bool, false, NULL==STIM_FunctionThatTakesTwoArrays_array2_called_pointer);
             ASSERT_ARE_EQUAL(int, 11, STIM_FunctionThatTakesTwoArrays_array1_copy[0]);
             ASSERT_ARE_EQUAL(int, 13, STIM_FunctionThatTakesTwoArrays_array1_copy[1]);
             ASSERT_ARE_EQUAL(int, 15, STIM_FunctionThatTakesTwoArrays_array1_copy[2]);
@@ -1051,7 +1051,7 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             ///arrange
             CMocksForParameterBuffers m(someTask);
             g_STIM_FunctionThatTakesAnArrayNParameters =2;
-            
+
             ///act
             int var1[2]={11,12};
             STIM_CALL_AT(m, 0, STIM_FunctionThatTakesAnArray(var1))
@@ -1096,7 +1096,7 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
 
         void justForStackFrame(CMocksForParameterBuffers& m)
         {
-            
+
             someSortOfT var1[2];
             var1[0]=someSortOfT(_T("thisIsTheString00"), "thisIsTheCharP00");
             var1[1]=someSortOfT(_T("thisIsTheString01"), "thisIsTheCharP01");
@@ -1109,7 +1109,7 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
         {
             ///arrange
             CMocksForParameterBuffers m(someTask);
-            
+
             ///act
             for(int i=0;i<1;i++)
             {
@@ -1186,7 +1186,7 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             m.RunUntilTick(0);
 
             ///assert
-            ASSERT_ARE_EQUAL(int, 7, g_STIM_FunctionThatTakesAConstArray[0][0]);        
+            ASSERT_ARE_EQUAL(int, 7, g_STIM_FunctionThatTakesAConstArray[0][0]);
         }
 
         TEST_FUNCTION(TimeDiscreteMicroMock_Const_ParameterBuffersAreSaved_understands_buffer_of_5_elements)
@@ -1202,7 +1202,7 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
             m.RunUntilTick(0);
 
             ///assert
-            ASSERT_ARE_EQUAL(int, 1, g_STIM_FunctionThatTakesAConstArray[0][0]);        
+            ASSERT_ARE_EQUAL(int, 1, g_STIM_FunctionThatTakesAConstArray[0][0]);
             ASSERT_ARE_EQUAL(int, 2, g_STIM_FunctionThatTakesAConstArray[0][1]);
             ASSERT_ARE_EQUAL(int, 3, g_STIM_FunctionThatTakesAConstArray[0][2]);
             ASSERT_ARE_EQUAL(int, 4, g_STIM_FunctionThatTakesAConstArray[0][3]);
@@ -1235,7 +1235,7 @@ BEGIN_TEST_SUITE(MicroMockStimTest)
         {
             /*I want this to fail because time doesn't match*/
             MyMocks3 m(someTaskThatCallsWhenTwoAtTimeEqualThree);
-            EXPECTED_CALL_AT(m, 4,  whentwo("two_tee_at_two", +4)); 
+            EXPECTED_CALL_AT(m, 4,  whentwo("two_tee_at_two", +4));
             m.RunUntilTick(10);
             ASSERT_ARE_EQUAL(tstring, tstring(_T("[Expected:whentwo(two_tee_at_two,4,4)][Actual:whentwo(two,-4,3)]")), m.CompareActualAndExpectedCalls());
         }

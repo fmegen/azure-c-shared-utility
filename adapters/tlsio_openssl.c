@@ -970,7 +970,7 @@ static int load_cert_crl_http(
         char* realmBase64;
         long length = BIO_get_mem_data(bioBase64, &realmBase64);
 
-        sprintf_s(authData, sizeof(authData), "Basic %.*s", length, realmBase64);
+        azure_c_shared_utility_sprintf_s(authData, sizeof(authData), "Basic %.*s", length, realmBase64);
 
         BIO_pop(bioPlain);
         BIO_free_all(bioBase64);

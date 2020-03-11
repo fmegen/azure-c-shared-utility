@@ -112,8 +112,8 @@ HTTP_HANDLE HTTPAPI_CreateConnection(const char* hostName)
             }
             else
             {
-                if ((strcpy_s(httpHandleData->hostURL, hostURL_size, "https://") == 0) &&
-                    (strcat_s(httpHandleData->hostURL, hostURL_size, hostName) == 0))
+                if ((azure_c_shared_utility_strcat_s(httpHandleData->hostURL, hostURL_size, "https://") == 0) &&
+                    (azure_c_shared_utility_strcat_s(httpHandleData->hostURL, hostURL_size, hostName) == 0))
                 {
                     httpHandleData->curl = curl_easy_init();
                     if (httpHandleData->curl == NULL)
@@ -267,7 +267,7 @@ static CURLcode ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *userptr)
             result = CURLE_SSL_CERTPROBLEM;
         }
         else if (
-            (httpHandleData->certificates != NULL) && 
+            (httpHandleData->certificates != NULL) &&
             (wolfSSL_CTX_load_verify_buffer(ssl_ctx, (const unsigned char*)httpHandleData->certificates, strlen(httpHandleData->certificates), SSL_FILETYPE_PEM) != SSL_SUCCESS)
             )
         {
@@ -331,8 +331,8 @@ HTTPAPI_RESULT HTTPAPI_ExecuteRequest(HTTP_HANDLE handle, HTTPAPI_REQUEST_TYPE r
                 result = HTTPAPI_SET_OPTION_FAILED;
                 LogError("failed to set CURLOPT_VERBOSE (result = %s)", ENUM_TO_STRING(HTTPAPI_RESULT, result));
             }
-            else if ((strcpy_s(tempHostURL, tempHostURL_size, httpHandleData->hostURL) != 0) ||
-                (strcat_s(tempHostURL, tempHostURL_size, relativePath) != 0))
+            else if ((azure_c_shared_utility_strcpy_s(tempHostURL, tempHostURL_size, httpHandleData->hostURL) != 0) ||
+                (azure_c_shared_utility_strcat_s(tempHostURL, tempHostURL_size, relativePath) != 0))
             {
                 result = HTTPAPI_STRING_PROCESSING_ERROR;
                 LogError("(result = %s)", ENUM_TO_STRING(HTTPAPI_RESULT, result));
@@ -763,7 +763,7 @@ HTTPAPI_RESULT HTTPAPI_SetOption(HTTP_HANDLE handle, const char* optionName, con
 
             HTTP_PROXY_OPTIONS* proxy_data = (HTTP_PROXY_OPTIONS*)value;
 
-            if (sprintf_s(proxy, MAX_HOSTNAME_LEN, "%s:%d", proxy_data->host_address, proxy_data->port) <= 0)
+            if (azure_c_shared_utility_sprintf_s(proxy, MAX_HOSTNAME_LEN, "%s:%d", proxy_data->host_address, proxy_data->port) <= 0)
             {
                 LogError("failure constructing proxy address");
                 result = HTTPAPI_ERROR;
@@ -789,7 +789,7 @@ HTTPAPI_RESULT HTTPAPI_SetOption(HTTP_HANDLE handle, const char* optionName, con
                         else
                         {
                             // From curl website 'Pass a char * as parameter, which should be [user name]:[password]'
-                            if (sprintf_s(proxy_auth, MAX_HOSTNAME_LEN, "%s:%s", proxy_data->username, proxy_data->password) <= 0)
+                            if (azure_c_shared_utility_sprintf_s(proxy_auth, MAX_HOSTNAME_LEN, "%s:%s", proxy_data->username, proxy_data->password) <= 0)
                             {
                                 LogError("failure constructing proxy authentication");
                                 result = HTTPAPI_ERROR;

@@ -44,8 +44,8 @@
 #ifdef _MSC_VER
 #else
 
-/*Codes_SRS_CRT_ABSTRACTIONS_99_008: [strcat_s shall append the src to dst and terminates the resulting string with a null character.]*/
-int strcat_s(char* dst, size_t dstSizeInBytes, const char* src)
+/*Codes_SRS_CRT_ABSTRACTIONS_99_008: [azure_c_shared_utility_strcat_s shall append the src to dst and terminates the resulting string with a null character.]*/
+int azure_c_shared_utility_strcat_s(char* dst, size_t dstSizeInBytes, const char* src)
 {
     int result;
     /*Codes_SRS_CRT_ABSTRACTIONS_99_004: [If dst is NULL or unterminated, the error code returned shall be EINVAL & dst shall not be modified.]*/
@@ -96,7 +96,7 @@ int strcat_s(char* dst, size_t dstSizeInBytes, const char* src)
                 }
                 else
                 {
-                    /*Codes_SRS_CRT_ABSTRACTIONS_99_003: [strcat_s shall return Zero upon success.]*/
+                    /*Codes_SRS_CRT_ABSTRACTIONS_99_003: [azure_c_shared_utility_strcat_s shall return Zero upon success.]*/
                     result = 0;
                 }
             }
@@ -107,7 +107,7 @@ int strcat_s(char* dst, size_t dstSizeInBytes, const char* src)
 }
 
 /*Codes_SRS_CRT_ABSTRACTIONS_99_025: [strncpy_s shall copy the first N characters of src to dst, where N is the lesser of MaxCount and the length of src.]*/
-int strncpy_s(char* dst, size_t dstSizeInBytes, const char* src, size_t maxCount)
+int azure_c_shared_utility_strncpy_s(char* dst, size_t dstSizeInBytes, const char* src, size_t maxCount)
 {
     int result;
     int truncationFlag = 0;
@@ -127,7 +127,7 @@ int strncpy_s(char* dst, size_t dstSizeInBytes, const char* src, size_t maxCount
     {
         result = EINVAL;
     }
-    else 
+    else
     {
         size_t srcLength = strlen(src);
         if (maxCount != _TRUNCATE)
@@ -148,7 +148,7 @@ int strncpy_s(char* dst, size_t dstSizeInBytes, const char* src, size_t maxCount
             {
                 (void)strncpy(dst, src, srcLength);
                 dst[srcLength] = '\0';
-                /*Codes_SRS_CRT_ABSTRACTIONS_99_018: [strncpy_s shall return Zero upon success]*/
+                /*Codes_SRS_CRT_ABSTRACTIONS_99_018: [azure_c_shared_utility_strncpy_s shall return Zero upon success]*/
                 result = 0;
             }
         }
@@ -175,8 +175,8 @@ int strncpy_s(char* dst, size_t dstSizeInBytes, const char* src, size_t maxCount
     return result;
 }
 
-/* Codes_SRS_CRT_ABSTRACTIONS_99_016: [strcpy_s shall copy the contents in the address of src, including the terminating null character, to the location that's specified by dst.]*/
-int strcpy_s(char* dst, size_t dstSizeInBytes, const char* src)
+/* Codes_SRS_CRT_ABSTRACTIONS_99_016: [azure_c_shared_utility_strcpy_s shall copy the contents in the address of src, including the terminating null character, to the location that's specified by dst.]*/
+int azure_c_shared_utility_strcpy_s(char* dst, size_t dstSizeInBytes, const char* src)
 {
     int result;
 
@@ -209,7 +209,7 @@ int strcpy_s(char* dst, size_t dstSizeInBytes, const char* src)
         else
         {
             (void)memcpy(dst, src, neededBuffer + 1);
-            /*Codes_SRS_CRT_ABSTRACTIONS_99_011: [strcpy_s shall return Zero upon success]*/
+            /*Codes_SRS_CRT_ABSTRACTIONS_99_011: [azure_c_shared_utility_strcpy_s shall return Zero upon success]*/
             result = 0;
         }
     }
@@ -217,12 +217,12 @@ int strcpy_s(char* dst, size_t dstSizeInBytes, const char* src)
     return result;
 }
 
-/*Codes_SRS_CRT_ABSTRACTIONS_99_029: [The sprintf_s function shall format and store series of characters and values in dst.  Each argument (if any) is converted and output according to the corresponding Format Specification in the format variable.]*/
+/*Codes_SRS_CRT_ABSTRACTIONS_99_029: [The azure_c_shared_utility_sprintf_s function shall format and store series of characters and values in dst.  Each argument (if any) is converted and output according to the corresponding Format Specification in the format variable.]*/
 /*Codes_SRS_CRT_ABSTRACTIONS_99_031: [A null character is appended after the last character written.]*/
-int sprintf_s(char* dst, size_t dstSizeInBytes, const char* format, ...)
+int azure_c_shared_utility_sprintf_s(char* dst, size_t dstSizeInBytes, const char* format, ...)
 {
     int result;
-    /*Codes_SRS_CRT_ABSTRACTIONS_99_028: [If dst or format is a null pointer, sprintf_s shall return -1 and set errno to EINVAL]*/
+    /*Codes_SRS_CRT_ABSTRACTIONS_99_028: [If dst or format is a null pointer, azure_c_shared_utility_sprintf_s shall return -1 and set errno to EINVAL]*/
     if ((dst == NULL) ||
         (format == NULL))
     {
@@ -231,9 +231,9 @@ int sprintf_s(char* dst, size_t dstSizeInBytes, const char* format, ...)
     }
     else
     {
-        /*Codes_SRS_CRT_ABSTRACTIONS_99_033: [sprintf_s shall check the format string for valid formatting characters.  If the check fails, the function returns -1.]*/
+        /*Codes_SRS_CRT_ABSTRACTIONS_99_033: [azure_c_shared_utility_sprintf_s shall check the format string for valid formatting characters.  If the check fails, the function returns -1.]*/
 
-#if defined _MSC_VER 
+#if defined _MSC_VER
 #error crt_abstractions is not provided for Microsoft Compilers
 #else
         /*not Microsoft compiler... */
@@ -338,7 +338,7 @@ unsigned long long strtoull_s(const char* nptr, char** endptr, int base)
                 runner++;
             }
         }
-        
+
         if(base == 0)
         {
             /*Codes_SRS_CRT_ABSTRACTIONS_21_007: [If the base is 0 and no special chars precedes the number, strtoull_s must convert to a decimal (base 10).]*/
@@ -524,7 +524,7 @@ static FLOAT_STRING_TYPE splitFloatString(const char* nptr, char** endptr, int *
                 result = FST_OVERFLOW;
             }
         }
-        
+
         if (((**endptr) == 'e') || ((**endptr) == 'E'))
         {
             startptr = (*endptr) + 1;
@@ -692,7 +692,7 @@ int mallocAndStrcpy_s(char** destination, const char* source)
     {
         size_t l = strlen(source);
         char* temp = (char*)malloc(l + 1);
-        
+
         /*Codes_SRS_CRT_ABSTRACTIONS_99_037: [Upon failure to allocate memory for the destination, the function will return ENOMEM.]*/
         if (temp == NULL)
         {
@@ -702,7 +702,7 @@ int mallocAndStrcpy_s(char** destination, const char* source)
         {
             *destination = temp;
             /*Codes_SRS_CRT_ABSTRACTIONS_99_039: [mallocAndstrcpy_s shall copy the contents in the address source, including the terminating null character into location specified by the destination pointer after the memory allocation.]*/
-            copied_result = strcpy_s(*destination, l + 1, source);
+            copied_result = azure_c_shared_utility_strcpy_s(*destination, l + 1, source);
             if (copied_result < 0) /*strcpy_s error*/
             {
                 free(*destination);

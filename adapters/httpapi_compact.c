@@ -92,9 +92,9 @@ static int ParseStringToDecimalAndRemaining(const char *src, int* dst, char* rem
         {
             cLen = maxRemainingSize - 1;
         }
-        (void)strcpy_s(remaining, cLen + 1, next);
+        (void)azure_c_shared_utility_strcpy_s(remaining, cLen + 1, next);
         remaining[maxRemainingSize - 1] = 0;
-    }    
+    }
     return result;
 }
 
@@ -1283,7 +1283,7 @@ static bool validRequestType(HTTPAPI_REQUEST_TYPE requestType)
 }
 
 HTTPAPI_RESULT HTTPAPI_ExecuteRequest_Internal(HTTP_HANDLE handle, HTTPAPI_REQUEST_TYPE requestType, const char* relativePath,
-    HTTP_HEADERS_HANDLE httpHeadersHandle, const unsigned char* content, size_t contentLength, 
+    HTTP_HEADERS_HANDLE httpHeadersHandle, const unsigned char* content, size_t contentLength,
     unsigned int* statusCode, char* reasonPhrase, const size_t maxReasonPhraseSize, HTTP_HEADERS_HANDLE responseHeadersHandle,
     BUFFER_HANDLE responseContent, ON_CHUNK_RECEIVED onChunkReceived, void* onChunkReceivedContext)
 {
@@ -1377,7 +1377,7 @@ HTTPAPI_RESULT HTTPAPI_ExecuteRequest_With_Reason_Phrase(HTTP_HANDLE handle, HTT
     size_t contentLength, unsigned int* statusCode, char* reasonPhrase, const size_t maxReasonPhraseSize,
     HTTP_HEADERS_HANDLE responseHeadersHandle, BUFFER_HANDLE responseContent)
 {
-    return HTTPAPI_ExecuteRequest_Internal(handle, requestType, relativePath, httpHeadersHandle, 
+    return HTTPAPI_ExecuteRequest_Internal(handle, requestType, relativePath, httpHeadersHandle,
         content, contentLength, statusCode, reasonPhrase, maxReasonPhraseSize, responseHeadersHandle, responseContent, NULL, NULL);
 }
 
@@ -1389,7 +1389,7 @@ HTTPAPI_RESULT HTTPAPI_ExecuteRequest_With_Streaming(HTTP_HANDLE handle, HTTPAPI
     size_t contentLength, unsigned int* statusCode, char* reasonPhrase, const size_t maxReasonPhraseSize,
     HTTP_HEADERS_HANDLE responseHeadersHandle, ON_CHUNK_RECEIVED onChunkReceived, void* onChunkReceivedContext)
 {
-    return HTTPAPI_ExecuteRequest_Internal(handle, requestType, relativePath, httpHeadersHandle, 
+    return HTTPAPI_ExecuteRequest_Internal(handle, requestType, relativePath, httpHeadersHandle,
         content, contentLength, statusCode, reasonPhrase, maxReasonPhraseSize, responseHeadersHandle, NULL, onChunkReceived, onChunkReceivedContext);
 }
 
@@ -1432,7 +1432,7 @@ HTTPAPI_RESULT HTTPAPI_SetOption(HTTP_HANDLE handle, const char* optionName, con
         else
         {
             /*Codes_SRS_HTTPAPI_COMPACT_21_064: [ If the HTTPAPI_SetOption get success setting the option, it shall return HTTPAPI_OK. ]*/
-            (void)strcpy_s(http_instance->certificate, len + 1, (const char*)value);
+            (void)azure_c_shared_utility_strcpy_s(http_instance->certificate, len + 1, (const char*)value);
             result = HTTPAPI_OK;
         }
     }
@@ -1452,7 +1452,7 @@ HTTPAPI_RESULT HTTPAPI_SetOption(HTTP_HANDLE handle, const char* optionName, con
         }
         else
         {
-            (void)strcpy_s(http_instance->tlsIoVersion, len + 1, (const char*)value);
+            (void)azure_c_shared_utility_strcpy_s(http_instance->tlsIoVersion, len + 1, (const char*)value);
             result = HTTPAPI_OK;
         }
     }
@@ -1475,7 +1475,7 @@ HTTPAPI_RESULT HTTPAPI_SetOption(HTTP_HANDLE handle, const char* optionName, con
         else
         {
             /*Codes_SRS_HTTPAPI_COMPACT_21_064: [ If the HTTPAPI_SetOption get success setting the option, it shall return HTTPAPI_OK. ]*/
-            (void)strcpy_s(http_instance->x509ClientCertificate, len + 1, (const char*)value);
+            (void)azure_c_shared_utility_strcpy_s(http_instance->x509ClientCertificate, len + 1, (const char*)value);
             result = HTTPAPI_OK;
         }
     }
@@ -1498,7 +1498,7 @@ HTTPAPI_RESULT HTTPAPI_SetOption(HTTP_HANDLE handle, const char* optionName, con
         else
         {
             /*Codes_SRS_HTTPAPI_COMPACT_21_064: [ If the HTTPAPI_SetOption get success setting the option, it shall return HTTPAPI_OK. ]*/
-            (void)strcpy_s(http_instance->x509ClientPrivateKey, len + 1, (const char*)value);
+            (void)azure_c_shared_utility_strcpy_s(http_instance->x509ClientPrivateKey, len + 1, (const char*)value);
             result = HTTPAPI_OK;
         }
     }
@@ -1542,7 +1542,7 @@ HTTPAPI_RESULT HTTPAPI_CloneOption(const char* optionName, const void* value, co
         else
         {
             /*Codes_SRS_HTTPAPI_COMPACT_21_072: [ If the HTTPAPI_CloneOption get success setting the option, it shall return HTTPAPI_OK. ]*/
-            (void)strcpy_s(tempCert, certLen + 1, (const char*)value);
+            (void)azure_c_shared_utility_strcpy_s(tempCert, certLen + 1, (const char*)value);
             *savedValue = tempCert;
             result = HTTPAPI_OK;
         }
@@ -1559,7 +1559,7 @@ HTTPAPI_RESULT HTTPAPI_CloneOption(const char* optionName, const void* value, co
         else
         {
             /*Codes_SRS_HTTPAPI_COMPACT_21_072: [ If the HTTPAPI_CloneOption get success setting the option, it shall return HTTPAPI_OK. ]*/
-            (void)strcpy_s(tempCert, certLen + 1, (const char*)value);
+            (void)azure_c_shared_utility_strcpy_s(tempCert, certLen + 1, (const char*)value);
             *savedValue = tempCert;
             result = HTTPAPI_OK;
         }
@@ -1576,7 +1576,7 @@ HTTPAPI_RESULT HTTPAPI_CloneOption(const char* optionName, const void* value, co
         else
         {
             /*Codes_SRS_HTTPAPI_COMPACT_21_072: [ If the HTTPAPI_CloneOption get success setting the option, it shall return HTTPAPI_OK. ]*/
-            (void)strcpy_s(tempCert, certLen + 1, (const char*)value);
+            (void)azure_c_shared_utility_strcpy_s(tempCert, certLen + 1, (const char*)value);
             *savedValue = tempCert;
             result = HTTPAPI_OK;
         }

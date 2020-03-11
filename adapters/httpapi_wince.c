@@ -45,8 +45,8 @@ int SSLInit(SOCKET s)
     SSLVALIDATECERTHOOK hook;
     SSLPROTOCOLS protocolsToUse;
     int ret;
-	
-    
+
+
     if (setsockopt(s, SOL_SOCKET, SO_SECURE, (LPSTR)&optval, sizeof(optval)) ==
         SOCKET_ERROR)
     {
@@ -129,9 +129,9 @@ HTTP_HANDLE HTTPAPI_CreateConnection(const char* hostName)
     {
         LogInfo("HTTPAPI_CreateConnection::Connecting to %s", hostName);
         handle = new HTTP_HANDLE_DATA();
-        if (strcpy_s(handle->host, MAX_HOSTNAME, hostName) != 0)
+        if (azure_c_shared_utility_strcpy_s(handle->host, MAX_HOSTNAME, hostName) != 0)
         {
-            LogError("HTTPAPI_CreateConnection::Could not strcpy_s");
+            LogError("HTTPAPI_CreateConnection::Could not azure_c_shared_utility_strcpy_s");
             delete handle;
             handle = NULL;
         }

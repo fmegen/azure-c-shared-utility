@@ -13,8 +13,8 @@ typedef struct data_tag
     int wasZeroCalled;
 
     int wasizeroCalled;
-    
-    int wasoneCalled;  
+
+    int wasoneCalled;
     int ioneiShadow;
 
     int wastwoCalled;
@@ -26,20 +26,20 @@ typedef struct data_tag
     char threesShadow[SHADOW_BUFFER_SIZE];
     int threeiShadow;
 
-    int wasfourCalled; 
+    int wasfourCalled;
     unsigned short int foursiShadow;
     char fourcShadow;
     char foursShadow[SHADOW_BUFFER_SIZE];
     int fouriShadow;
 
-    int wasfiveCalled; 
+    int wasfiveCalled;
     pVoidFunction fivepVoidShadow;
     unsigned short int fivesiShadow;
     char fivecShadow;
     char fivesShadow[SHADOW_BUFFER_SIZE];
     int fiveiShadow;
 
-    int wassixCalled;  
+    int wassixCalled;
     char sixc1Shadow ,sixc2Shadow ,sixc3Shadow ,sixc4Shadow ,sixc5Shadow ,sixc6Shadow;
 }data;
 /*static variables*/
@@ -68,7 +68,7 @@ int one(_In_ int i)
 int two(_In_z_ pChar s, _In_ int i)
 {
     d.wastwoCalled=1;
-    strcpy_s(d.twosShadow, SHADOW_BUFFER_SIZE,s);
+    azure_c_shared_utility_strcpy_s(d.twosShadow, SHADOW_BUFFER_SIZE,s);
     //d.twosShadow[0]=s;
 
     d.twoiShadow = i;
@@ -79,7 +79,7 @@ int three(_In_ char c, _In_z_ pChar s, _In_ int i)
 {
     d.wasthreeCalled=1;
     d.threecShadow=c;
-    strcpy_s(d.threesShadow, SHADOW_BUFFER_SIZE, s);
+    azure_c_shared_utility_strcpy_s(d.threesShadow, SHADOW_BUFFER_SIZE, s);
     //d.threesShadow[0]=s;
     d.threeiShadow = i;
     return 0;
@@ -90,7 +90,7 @@ int four(_In_ unsigned short int si, _In_ char c, _In_z_ pChar s, _In_ int i)
     d.wasfourCalled=1;
     d.foursiShadow = si;
     d.fourcShadow=c;
-    strcpy_s(d.foursShadow, SHADOW_BUFFER_SIZE, s);
+    azure_c_shared_utility_strcpy_s(d.foursShadow, SHADOW_BUFFER_SIZE, s);
     //d.foursShadow[0]=s;
     d.fouriShadow = i;
     return 0;
@@ -102,7 +102,7 @@ int five(_In_opt_ pVoidFunction pVoid, _In_ unsigned short int si, _In_ char c, 
     d.fivepVoidShadow = pVoid;
     d.fivesiShadow = si;
     d.fivecShadow=c;
-    strcpy_s(d.fivesShadow, SHADOW_BUFFER_SIZE, s);
+    azure_c_shared_utility_strcpy_s(d.fivesShadow, SHADOW_BUFFER_SIZE, s);
     //d.fivesShadow[0]=s;
     d.fiveiShadow = i;
     return 0;

@@ -82,6 +82,12 @@ typedef unsigned char bool;
 /* Codes_SRS_CRT_ABSTRACTIONS_99_040 : [The module shall still compile when building on a Microsoft platform.] */
 /* Codes_SRS_CRT_ABSTRACTIONS_99_002: [CRTAbstractions module shall expose the following API]*/
 #ifdef _MSC_VER
+#define azure_c_shared_utility_sprintf_s sprintf_s
+#define azure_c_shared_utility_strcat_s strcat_s
+#define azure_c_shared_utility_strncpy_s strncpy_s
+#define azure_c_shared_utility_sprintf_s sprintf_s
+#define azure_c_shared_utility_strcpy_s strcpy_s
+
 #else // _MSC_VER
 
 /* Adding definitions from errno.h & crtdefs.h */
@@ -93,11 +99,13 @@ typedef unsigned char bool;
 #define STRUNCATE       80
 #endif  /* !defined (STRUNCATE) */
 
-extern int strcpy_s(char* dst, size_t dstSizeInBytes, const char* src);
-extern int strcat_s(char* dst, size_t dstSizeInBytes, const char* src);
-extern int strncpy_s(char* dst, size_t dstSizeInBytes, const char* src, size_t maxCount);
-extern int sprintf_s(char* dst, size_t dstSizeInBytes, const char* format, ...);
+extern int azure_c_shared_utility_strcpy_s(char* dst, size_t dstSizeInBytes, const char* src);
+extern int azure_c_shared_utility_strcat_s(char* dst, size_t dstSizeInBytes, const char* src);
+extern int azure_c_shared_utility_strncpy_s(char* dst, size_t dstSizeInBytes, const char* src, size_t maxCount);
+extern int azure_c_shared_utility_sprintf_s(char* dst, size_t dstSizeInBytes, const char* format, ...);
+
 #endif // _MSC_VER
+
 
 extern unsigned long long strtoull_s(const char* nptr, char** endPtr, int base);
 extern float strtof_s(const char* nptr, char** endPtr);
@@ -137,7 +145,7 @@ extern "C++" {
 #define ISNAN std::isnan
 }
 #else // __cplusplus
-#error unknown (or C89) compiler, provide ISNAN with the same meaning as isnan in C99 standard  
+#error unknown (or C89) compiler, provide ISNAN with the same meaning as isnan in C99 standard
 #endif // __cplusplus
 
 #endif // __STDC_VERSION__
