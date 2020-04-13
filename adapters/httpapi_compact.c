@@ -333,9 +333,10 @@ static void on_io_close_complete(void* context)
 void HTTPAPI_CloseConnection(HTTP_HANDLE handle)
 {
 
-#ifdef _MSC_VER
-#pragma warning(suppress: 6001) /* False positive, http_instance is null checked before use. */
-#endif
+#ifdef WIN32
+#pragma warning(push)
+#pragma warning(disable:6001)
+#endif // WIN32
 
     HTTP_HANDLE_DATA* http_instance = (HTTP_HANDLE_DATA*)handle;
 
@@ -402,6 +403,10 @@ void HTTPAPI_CloseConnection(HTTP_HANDLE handle)
         }
         free(http_instance);
     }
+    
+#ifdef WIN32
+#pragma warning(pop)
+#endif // WIN32
 }
 
 static void on_io_open_complete(void* context, IO_OPEN_RESULT_DETAILED open_result_detailed)
