@@ -332,6 +332,11 @@ static void on_io_close_complete(void* context)
 
 void HTTPAPI_CloseConnection(HTTP_HANDLE handle)
 {
+
+#ifdef _MSC_VER
+#pragma warning(suppress: 6001) /* False positive, http_instance is null checked before use. */
+#endif
+
     HTTP_HANDLE_DATA* http_instance = (HTTP_HANDLE_DATA*)handle;
 
     /*Codes_SRS_HTTPAPI_COMPACT_21_020: [ If the connection handle is NULL, the HTTPAPI_CloseConnection shall not do anything. ]*/
