@@ -816,11 +816,14 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
                 }
                 else
                 {
+                    LogInfo("Added message to queue.");
                     result = 0;
                 }
             }
             else
             {
+                LogInfo("Queue is empty, directly sending message.");
+
                 signal(SIGPIPE, SIG_IGN);
 
                 ssize_t send_result = send(socket_io_instance->socket, buffer, size, 0);
@@ -835,6 +838,7 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
                     {
                         if (send_result == INVALID_SOCKET && errno == EAGAIN) /*send says "come back later" with EAGAIN - likely the socket buffer cannot accept more data*/
                         {
+                            LogInfo("Putting full message back into the queue.");
                             // put the full message in the queue
                             send_result = 0;
                         }
@@ -847,12 +851,15 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
                         }
                         else
                         {
+                            LogInfo("Added to queue successfully.");
                             result = 0;
                         }
                     }
                 }
                 else
                 {
+                    LogInfo("Send Complete");
+                    
                     if (on_send_complete != NULL)
                     {
                         on_send_complete(callback_context, IO_SEND_OK);
@@ -869,12 +876,14 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
 
 void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
 {
+    LogInfo("DoWorkLoop");
     if (socket_io != NULL)
     {
         SOCKET_IO_INSTANCE* socket_io_instance = (SOCKET_IO_INSTANCE*)socket_io;
         LIST_ITEM_HANDLE first_pending_io = singlylinkedlist_get_head_item(socket_io_instance->pending_io_list);
         while (first_pending_io != NULL)
         {
+            LogInfo("Data is queued for transmit, sending...");
             PENDING_SOCKET_IO* pending_socket_io = (PENDING_SOCKET_IO*)singlylinkedlist_item_get_value(first_pending_io);
             if (pending_socket_io == NULL)
             {
@@ -893,6 +902,7 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
                 {
                     if (errno == EAGAIN) /*send says "come back later" with EAGAIN - likely the socket buffer cannot accept more data*/
                     {
+                        LogInfo("Socket is full...");
                         /*do nothing until next dowork */
                         break;
                     }
@@ -909,6 +919,7 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
                 }
                 else
                 {
+                    LogInfo("Partial send of data");
                     /* simply wait until next dowork */
                     (void)memmove(pending_socket_io->bytes, pending_socket_io->bytes + send_result, pending_socket_io->size - send_result);
                     pending_socket_io->size -= send_result;
@@ -940,9 +951,12 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
             ssize_t received = 0;
             do
             {
+                LogInfo("Checking reccv for new data");
                 received = recv(socket_io_instance->socket, socket_io_instance->recv_bytes, RECEIVE_BYTES_VALUE, 0);
                 if (received > 0)
                 {
+                    LogInfo("Got data");
+
                     if (socket_io_instance->on_bytes_received != NULL)
                     {
                         /* Explicitly ignoring here the result of the callback */
@@ -958,6 +972,10 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
                 {
                     LogError("Socketio_Failure: Receiving data from endpoint: errno=%d.", errno);
                     indicate_error(socket_io_instance);
+                }
+                else
+                {
+                    LogInfo("recv got EAGAIN");
                 }
 
             } while (received > 0 && socket_io_instance->io_state == IO_STATE_OPEN);
