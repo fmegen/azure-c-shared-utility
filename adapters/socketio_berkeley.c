@@ -606,7 +606,7 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
             socket_io_instance->socket = socket(AF_INET, SOCK_STREAM, 0);
             if (socket_io_instance->socket < SOCKET_SUCCESS)
             {
-                LogError("Failure: socket create failure %d.", socket_io_instance->socket);
+                LogError("Failure: socket create failure %d, %s.", socket_io_instance->socket, strerror(errno));
                 open_result_detailed.code = socket_io_instance->socket;
                 result = __FAILURE__;
             }
