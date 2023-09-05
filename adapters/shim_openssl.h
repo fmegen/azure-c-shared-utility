@@ -8,12 +8,25 @@
 #elif (OPENSSL_VERSION_NUMBER >> 12) == 0x10002
 #define USE_OPENSSL_1_0_2 1
 #define USE_OPENSSL_1_1_0_OR_UP 0
+#define USE_OPENSSL_3_0_X 0
 #elif ((OPENSSL_VERSION_NUMBER >> 12) == 0x10100 || \
        (OPENSSL_VERSION_NUMBER >> 12) == 0x10101)
 #define USE_OPENSSL_1_0_2 0
 #define USE_OPENSSL_1_1_0_OR_UP 1
+#define USE_OPENSSL_3_0_X 0
+#elif (OPENSSL_VERSION_NUMBER >> 20) == 0x300
+// OpenSSL 3.0.x
+// OpenSSL 3+ changed how versions of patches are defined
+// and patches will update the 3rd (patch number) of the
+// semantic versioning number.  This means we don't want to
+// look at the 3rd number to determine if we are using OpenSSL 3.0
+#define USE_OPENSSL_1_0_2 0
+#define USE_OPENSSL_1_1_0_OR_UP 1
+#define USE_OPENSSL_3_0_X 1
+// For now, we disable deprecation warnings/errors in OpenSSL 3.0.x
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #else
-#error Fatal: unexpected OPENSSL_VERSION_NUMBER; OpenSSL 1.0.2, 1.1.0, or 1.1.1 is required.
+#error Fatal: unexpected OPENSSL_VERSION_NUMBER; OpenSSL 1.0.2, 1.1.0, 1.1.1, or 3.0.x is required.
 // Note: version >= 0x20000000L and < 0x30000000L would be the FIPS-enabled one.
 // Also explicitly ignored here.
 #endif
@@ -83,16 +96,24 @@
     REQUIRED_FUNCTION_1_0_2(ERR_remove_thread_state) \
     REQUIRED_FUNCTION(EVP_PKEY_free) \
     REQUIRED_FUNCTION(EVP_PKEY_get1_RSA) \
-    REQUIRED_FUNCTION(EVP_PKEY_id) \
+    REQUIRED_FUNCTION_NOT_3_0_X(EVP_PKEY_id) \
+    REQUIRED_FUNCTION_3_0_X(EVP_PKEY_get_id) \
     REQUIRED_FUNCTION_1_0_2(EVP_cleanup) \
     REQUIRED_FUNCTION_1_0_2(FIPS_mode_set) \
     REQUIRED_FUNCTION(GENERAL_NAME_get0_value) \
-    REQUIRED_FUNCTION(OCSP_REQ_CTX_add1_header) \
-    REQUIRED_FUNCTION(OCSP_REQ_CTX_free) \
-    REQUIRED_FUNCTION(OCSP_REQ_CTX_http) \
-    REQUIRED_FUNCTION(OCSP_REQ_CTX_new) \
-    REQUIRED_FUNCTION(OCSP_parse_url) \
-    REQUIRED_FUNCTION(OCSP_set_max_response_length) \
+    REQUIRED_FUNCTION_NOT_3_0_X(OCSP_REQ_CTX_add1_header) \
+    REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_add1_header) \
+    REQUIRED_FUNCTION_NOT_3_0_X(OCSP_REQ_CTX_free) \
+    REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_free) \
+    REQUIRED_FUNCTION_NOT_3_0_X(OCSP_REQ_CTX_http) \
+    REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_set_expected) \
+    REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_set_request_line) \
+    REQUIRED_FUNCTION_NOT_3_0_X(OCSP_REQ_CTX_new) \
+    REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_new) \
+    REQUIRED_FUNCTION_NOT_3_0_X(OCSP_parse_url) \
+    REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_parse_url) \
+    REQUIRED_FUNCTION_NOT_3_0_X(OCSP_set_max_response_length) \
+    REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_set_max_response_length) \
     REQUIRED_FUNCTION_1_0_2(OPENSSL_add_all_algorithms_noconf) \
     REQUIRED_FUNCTION_1_1_0(OPENSSL_sk_free) \
     REQUIRED_FUNCTION_1_1_0(OPENSSL_sk_new_null) \
@@ -137,12 +158,15 @@
     REQUIRED_FUNCTION_1_0_2(TLSv1_2_method) \
     REQUIRED_FUNCTION_1_0_2(TLSv1_method) \
     REQUIRED_FUNCTION(X509_CRL_free) \
+    REQUIRED_FUNCTION_3_0_X(X509_CRL_it) \
     REQUIRED_FUNCTION_1_1_0(X509_CRL_get0_nextUpdate) \
     REQUIRED_FUNCTION_1_1_0(X509_CRL_get_issuer) \
-    REQUIRED_FUNCTION(X509_CRL_http_nbio) \
+    REQUIRED_FUNCTION_NOT_3_0_X(X509_CRL_http_nbio) \
+    REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_nbio_d2i) \
     REQUIRED_FUNCTION_1_1_0(X509_CRL_up_ref) \
     REQUIRED_FUNCTION(X509_NAME_cmp) \
-    REQUIRED_FUNCTION(X509_NAME_hash) \
+    REQUIRED_FUNCTION_NOT_3_0_X(X509_NAME_hash) \
+    REQUIRED_FUNCTION_3_0_X(X509_NAME_hash_ex) \
     REQUIRED_FUNCTION(X509_STORE_CTX_get_current_cert) \
     REQUIRED_FUNCTION(X509_STORE_add_cert) \
     REQUIRED_FUNCTION_1_1_0(X509_STORE_get0_param) \
@@ -175,6 +199,15 @@
 #else
 #define REQUIRED_FUNCTION_1_0_2 REQUIRED_FUNCTION
 #define REQUIRED_FUNCTION_1_1_0(fn)
+#endif
+// Some new functions for OpenSSL 3 and some functions no longer
+// exist in OpenSSL 3 so we have to mark those as "NOT_3_0_X"
+#if USE_OPENSSL_3_0_X
+#define REQUIRED_FUNCTION_3_0_X REQUIRED_FUNCTION
+#define REQUIRED_FUNCTION_NOT_3_0_X(fn)
+#else
+#define REQUIRED_FUNCTION_3_0_X(fn)
+#define REQUIRED_FUNCTION_NOT_3_0_X REQUIRED_FUNCTION
 #endif
 
 // Declare all function pointers.
@@ -212,14 +245,7 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define ERR_peek_last_error ERR_peek_last_error_ptr
 #define EVP_PKEY_free EVP_PKEY_free_ptr
 #define EVP_PKEY_get1_RSA EVP_PKEY_get1_RSA_ptr
-#define EVP_PKEY_id EVP_PKEY_id_ptr
 #define GENERAL_NAME_get0_value GENERAL_NAME_get0_value_ptr
-#define OCSP_REQ_CTX_add1_header OCSP_REQ_CTX_add1_header_ptr
-#define OCSP_REQ_CTX_free OCSP_REQ_CTX_free_ptr
-#define OCSP_REQ_CTX_http OCSP_REQ_CTX_http_ptr
-#define OCSP_REQ_CTX_new OCSP_REQ_CTX_new_ptr
-#define OCSP_parse_url OCSP_parse_url_ptr
-#define OCSP_set_max_response_length OCSP_set_max_response_length_ptr
 #define PEM_read_bio_PrivateKey PEM_read_bio_PrivateKey_ptr
 #define PEM_read_bio_X509 PEM_read_bio_X509_ptr
 #define PEM_read_bio_X509_AUX PEM_read_bio_X509_AUX_ptr
@@ -246,9 +272,7 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define SSL_set_connect_state SSL_set_connect_state_ptr
 #define SSL_write SSL_write_ptr
 #define X509_CRL_free X509_CRL_free_ptr
-#define X509_CRL_http_nbio X509_CRL_http_nbio_ptr
 #define X509_NAME_cmp X509_NAME_cmp_ptr
-#define X509_NAME_hash X509_NAME_hash_ptr
 #define X509_STORE_CTX_get_current_cert X509_STORE_CTX_get_current_cert_ptr
 #define X509_STORE_add_cert X509_STORE_add_cert_ptr
 #define X509_STORE_set_flags X509_STORE_set_flags_ptr
@@ -263,6 +287,33 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define X509_STORE_set_verify_cb X509_STORE_set_verify_cb_ptr
 #define X509_STORE_CTX_get_error X509_STORE_CTX_get_error_ptr
 #define SSL_get0_param SSL_get0_param_ptr
+
+#if USE_OPENSSL_3_0_X
+// OpenSSL 3.0 compatibility macrros deal with some changes but we need to
+// deal with the newer funcitons needed and not include those that no longer
+// exist in OpenSSL 3
+#define EVP_PKEY_get_id EVP_PKEY_get_id_ptr
+#define OSSL_HTTP_parse_url OSSL_HTTP_parse_url_ptr
+#define OSSL_HTTP_REQ_CTX_add1_header OSSL_HTTP_REQ_CTX_add1_header_ptr
+#define OSSL_HTTP_REQ_CTX_free OSSL_HTTP_REQ_CTX_free_ptr
+#define OSSL_HTTP_REQ_CTX_nbio_d2i OSSL_HTTP_REQ_CTX_nbio_d2i_ptr
+#define OSSL_HTTP_REQ_CTX_new OSSL_HTTP_REQ_CTX_new_ptr
+#define OSSL_HTTP_REQ_CTX_set_expected OSSL_HTTP_REQ_CTX_set_expected_ptr
+#define OSSL_HTTP_REQ_CTX_set_max_response_length OSSL_HTTP_REQ_CTX_set_max_response_length_ptr
+#define OSSL_HTTP_REQ_CTX_set_request_line OSSL_HTTP_REQ_CTX_set_request_line_ptr
+#define X509_CRL_it X509_CRL_it_ptr
+#define X509_NAME_hash_ex X509_NAME_hash_ex_ptr
+#else
+#define EVP_PKEY_id EVP_PKEY_id_ptr
+#define OCSP_parse_url OCSP_parse_url_ptr
+#define OCSP_REQ_CTX_add1_header OCSP_REQ_CTX_add1_header_ptr
+#define OCSP_REQ_CTX_free OCSP_REQ_CTX_free_ptr
+#define OCSP_REQ_CTX_http OCSP_REQ_CTX_http_ptr
+#define OCSP_REQ_CTX_new OCSP_REQ_CTX_new_ptr
+#define OCSP_set_max_response_length OCSP_set_max_response_length_ptr
+#define X509_CRL_http_nbio X509_CRL_http_nbio_ptr
+#define X509_NAME_hash X509_NAME_hash_ptr
+#endif
 
 #if USE_OPENSSL_1_0_2
 #define ASN1_STRING_data ASN1_STRING_data_ptr
@@ -320,7 +371,7 @@ FOR_ALL_OPENSSL_FUNCTIONS
 
 // Stack functions have been already defined w/o the above define's in place.
 // Redefine the ones that we are using.
-
+#if !USE_OPENSSL_3_0_X
 #define sk_GENERAL_NAME_num(stack) OPENSSL_sk_num((const OPENSSL_STACK*)(1 ? stack : (const STACK_OF(GENERAL_NAME)*)0))
 #define sk_DIST_POINT_num(stack) OPENSSL_sk_num((const OPENSSL_STACK*)(1 ? stack : (const STACK_OF(DIST_POINT)*)0))
 
@@ -336,6 +387,7 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define sk_DIST_POINT_push(stack,value) OPENSSL_sk_push((OPENSSL_STACK*)(1 ? stack : (STACK_OF(DIST_POINT)*)0), (const void*)(1 ? value : (DIST_POINT*)0))
 
 #define sk_DIST_POINT_pop_free(stack, freefunc) OPENSSL_sk_pop_free((OPENSSL_STACK*)(1 ? stack : (STACK_OF(DIST_POINT)*)0), (OPENSSL_sk_freefunc)(1 ? freefunc : (sk_DIST_POINT_freefunc)0))
+#endif
 
 #endif
 
