@@ -42,6 +42,7 @@
 #include "azure_c_shared_utility/shared_util_options.h"
 #include "azure_c_shared_utility/xlogging.h"
 #include "azure_c_shared_utility/const_defines.h"
+#include "azure_c_shared_utility/mru_cache.h"
 #include <sys/ioctl.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -96,6 +97,123 @@ typedef struct NETWORK_INTERFACE_DESCRIPTION_TAG
     char* ip_address;
     struct NETWORK_INTERFACE_DESCRIPTION_TAG* next;
 } NETWORK_INTERFACE_DESCRIPTION;
+
+static MRU_CACHE_HANDLE getDnsCache()
+{
+    static MRU_CACHE_HANDLE dnsCache = NULL;
+    if (dnsCache == NULL)
+    {
+        dnsCache = MRU_CACHE_new(20);
+    }
+    
+    return dnsCache;
+}
+
+static void freeAddrInfo(void *ptr)
+{
+    freeaddrinfo((struct addrinfo*)ptr);
+}
+
+static int getAddrInfoWithCaching(const char* hostName, int port, SMART_PTR_HANDLE* handle)
+{
+    if (hostName == NULL)
+    {
+        return __FAILURE__;
+    }
+    else if (handle == NULL)
+    {
+        return __FAILURE__;
+    }
+
+    *handle = NULL;
+
+    MRU_CACHE_HANDLE cache = getDnsCache();
+    if (cache == NULL)
+    {
+        LogError("Failed to initialize DNS cache (malloc error)");
+        return __FAILURE__;
+    }
+
+    // do we already have a non-expired cached value for this?
+    int cacheRet = MRU_CACHE_get(cache, hostName, handle);
+    if (cacheRet != 0)
+    {
+         LogInfo("Failed to check DNS cache for existing value for %s:%d (%d). Will send network request",
+            hostName, port, cacheRet);
+        // continue
+    }
+    else if (*handle != NULL)
+    {
+        LogInfo("Returning cached value for %s:%d", hostName, port);
+        MRU_CACHE_prune(cache);
+        return 0;
+    }
+    
+    // Try to do the DNS lookup
+    int err = 0;
+    {
+        struct addrinfo addrHint = { 0 };
+        addrHint.ai_family = AF_INET;
+        addrHint.ai_socktype = SOCK_STREAM;
+        addrHint.ai_protocol = 0;
+
+        char portString[16];
+        sprintf(portString, "%u", port);
+
+        struct addrinfo* addrInfo = NULL;
+        err = getaddrinfo(hostName, portString, &addrHint, &addrInfo);
+        if (err != 0)
+        {
+            LogError("Failure: getaddrinfo failure [%d] %s", err, gai_strerror(err));
+
+            // continue and see if we have a cached IP address
+        }
+        else
+        {
+            *handle = SMART_PTR_create(addrInfo, freeAddrInfo);
+            if (*handle == NULL)
+            {
+                LogError("Failure: failed to create a smart pointer handle");
+                freeaddrinfo(addrInfo);
+                return __FAILURE__;
+            }
+
+            // the smart_ptr now owns the struct addrinfo* pointer
+        }
+    }
+
+    if (*handle != NULL)
+    {
+        // updating the cached value. Sadly we can't get the actual DNS record TTL value from getaddrinfo
+        // so we just use a default of 15 minutes here
+        int res = MRU_CACHE_add(cache, hostName, *handle, 900);
+        if (res != 0)
+        {
+            // don't care if we couldn't update the cache
+            LogInfo("WARNING: Failed to add a DNS cache entry for %s:%d. Error: %d. Ignoring", hostName, port, res);
+        }
+    }
+    else
+    {
+        // return a cached value if we have one even if it has expired
+        cacheRet = MRU_CACHE_get_include_expired(cache, hostName, handle);
+        if (cacheRet != 0)
+        {
+            LogInfo("WARNING: Failed to search DNS cache entry for %s:%d. Error: %d. Ignoring", hostName, port, cacheRet);
+        }
+        else if (*handle != NULL)
+        {
+            LogInfo("WARNING: Using cached and expired DNS entry for %s:%d", hostName, port);
+
+            // update to NOT return an error since we are using a cached value
+            err = 0;
+        }
+    }
+
+    // return the original getaddrinfo error
+    MRU_CACHE_prune(cache);
+    return err;
+}
 
 /*this function will clone an option given by name and value*/
 static void* socketio_CloneOption(const char* name, const void* value)
@@ -600,9 +718,6 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
         }
         else
         {
-            struct addrinfo* addrInfo;
-            char portString[16];
-
             socket_io_instance->socket = socket(AF_INET, SOCK_STREAM, 0);
             if (socket_io_instance->socket < SOCKET_SUCCESS)
             {
@@ -622,16 +737,11 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
 #endif //__APPLE__
             else
             {
-                struct addrinfo addrHint = { 0 };
-                addrHint.ai_family = AF_INET;
-                addrHint.ai_socktype = SOCK_STREAM;
-                addrHint.ai_protocol = 0;
+                SMART_PTR_HANDLE resolveAddrInfo = NULL;
 
-                sprintf(portString, "%u", socket_io_instance->port);
-                int err = getaddrinfo(socket_io_instance->hostname, portString, &addrHint, &addrInfo);
+                int err = getAddrInfoWithCaching(socket_io_instance->hostname, socket_io_instance->port, &resolveAddrInfo);
                 if (err != 0)
                 {
-                    LogError("Failure: getaddrinfo failure %d.", err);
                     open_result_detailed.code = err;
                     close(socket_io_instance->socket);
                     socket_io_instance->socket = INVALID_SOCKET;
@@ -651,7 +761,8 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
                     }
                     else
                     {
-                        err = connect(socket_io_instance->socket, addrInfo->ai_addr, sizeof(*addrInfo->ai_addr));
+                        struct addrinfo* addrInfo = (struct addrinfo*)SMART_PTR_get(resolveAddrInfo);
+                        err = connect(socket_io_instance->socket, addrInfo->ai_addr, addrInfo->ai_addrlen);
                         if ((err != 0) && (errno != EINPROGRESS))
                         {
                             LogError("Failure: connect failure %d.", errno);
@@ -738,8 +849,9 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
                             }
                         }
                     }
-                    freeaddrinfo(addrInfo);
                 }
+
+                SMART_PTR_delete(resolveAddrInfo);
             }
         }
     }

@@ -206,6 +206,8 @@ ${TICKCOUTER_C_FILE}
 ${THREAD_C_FILE}
 ${UNIQUEID_C_FILE}
 ${ENVIRONMENT_VARIABLE_C_FILE}
+./src/mru_cache.c
+./src/smart_ptr.c
 )
 
 if(UNIX) #LINUX OR APPLE
@@ -306,6 +308,8 @@ ${LOGGING_H_FILE}
 ./inc/azure_c_shared_utility/constbuffer.h
 ./inc/azure_c_shared_utility/tlsio.h
 ./inc/azure_c_shared_utility/optionhandler.h
+./inc/azure_c_shared_utility/smart_ptr.h
+./inc/azure_c_shared_utility/mru_cache.h
 )
 
 if(UNIX) #LINUX OR APPLE
