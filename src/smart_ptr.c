@@ -150,7 +150,7 @@ void SMART_PTR_delete(SMART_PTR_HANDLE handle)
         if (refCount == 0)
         {
             free_ref(handle->ref);
-            handle->ref == NULL;
+            handle->ref = NULL;
         }
     }
     

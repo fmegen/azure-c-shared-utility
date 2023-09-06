@@ -248,7 +248,6 @@ int MRU_CACHE_add(MRU_CACHE_HANDLE handle, const char* id, SMART_PTR_HANDLE data
     {
         MRU_CACHE_ENTRY* lastEntry = entry_from_dlist(instance->list.Blink);
         remove_entry(instance, lastEntry);
-
         free_entry(lastEntry);
     }
 
