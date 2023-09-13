@@ -289,8 +289,8 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define SSL_get0_param SSL_get0_param_ptr
 
 #if USE_OPENSSL_3_0_X
-// OpenSSL 3.0 compatibility macrros deal with some changes but we need to
-// deal with the newer funcitons needed and not include those that no longer
+// OpenSSL 3.0 compatibility macros deal with some changes but we need to
+// deal with the newer functions needed and not include those that no longer
 // exist in OpenSSL 3
 #define EVP_PKEY_get_id EVP_PKEY_get_id_ptr
 #define OSSL_HTTP_parse_url OSSL_HTTP_parse_url_ptr
