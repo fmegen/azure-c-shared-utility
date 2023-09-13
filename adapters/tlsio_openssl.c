@@ -998,7 +998,22 @@ static int load_cert_crl_http(
 
     do
     {
+        #if USE_OPENSSL_3_0_X
+        // How does this actually resolve?  The old function is no longer there
+        // in OpenSSL 3 so there is a compatibility macro:
+        // #define X509_CRL_http_nbio(rctx, pcrl) OCSP_REQ_CTX_nbio_d2i(rctx, pcrl, ASN1_ITEM_rptr(X509_CRL))
+        // Note that this ends up needing X500_CRL_it() due to this macro:
+        // #define ASN1_ITEM_rptr(ref) (ref##_it())
+        // But the OCSP_REQ_CTX_nbio_d2i also no longer exists so it has to call
+        // the OSSL_HTTP_REQ_CTX_nbio_d2i function that has the same signature.
+        // #define OCSP_REQ_CTX_nbio_d2i OSSL_HTTP_REQ_CTX_nbio_d2i
+        // int OSSL_HTTP_REQ_CTX_nbio_d2i(OSSL_HTTP_REQ_CTX *rctx, ASN1_VALUE **pval, const ASN1_ITEM *it);
+        // The cast is valid and lets us not ignore the warning about type mismatch.
+        // (X509_CRL is a specific ASN1_VALUE)
+        rv = X509_CRL_http_nbio(rctx, (ASN1_VALUE **)pcrl);
+        #else
         rv = X509_CRL_http_nbio(rctx, pcrl);
+        #endif
     } while (rv == -1);
 
 error:
@@ -1570,7 +1585,15 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
     return crl;
 }
 
+#if USE_OPENSSL_3_0_X
+// In OpenSSL 3 they correctly defined this using const (since you are not to
+// change the data, just inspect them.  However, you can't use that in pre-3.0
+// as the functions we need are not defined with const so we have to only use
+// const signatures in the 3.0+ case.
+static STACK_OF(X509_CRL) *crls_http_cb(const X509_STORE_CTX *ctx, const X509_NAME *nm)
+#else
 static STACK_OF(X509_CRL) *crls_http_cb(X509_STORE_CTX *ctx, X509_NAME *nm)
+#endif
 {
     X509_CRL *crl;
     STACK_OF(DIST_POINT) *crldp;
@@ -1726,9 +1749,9 @@ static int load_system_store(TLS_IO_INSTANCE* tls_io_instance)
             X509_CRL_free(x509_crl);
         }
     }
-/* 
+/*
     // [DCohen 9/3/2021] Remove this hard-coded setting. By default CRL check will still be done, however by removing this
-    // hard coded setting, the Windows UWP application now has the option to set OPENSSL_DISABLE_CRL_CHECK or 
+    // hard coded setting, the Windows UWP application now has the option to set OPENSSL_DISABLE_CRL_CHECK or
     // OPENSSL_CONTINUE_ON_CRL_DOWNLOAD_FAILURE properties on SpeechConfig to control disabling of CRL. This is done
     // by the logic at the end of the function setup_crl_check() below. Note that this function is only defined
     // for WIN32 builds, however since Carbon uses tlsio_schannel.c for native Windows application, the code here
