@@ -69,7 +69,7 @@ int load_libssl()
 
 #if USE_OPENSSL_3_0_X
     const int minVersion = 0x30000000L;
-    const int maxVersion = 0x30100000L;  // 3.1.0 - I don't know if we are compatible for all 3.x yet
+    const int maxVersion = 0x40000000L;
     REQUIRED_FUNCTION(OpenSSL_version_num);
     if (OpenSSL_version_num_ptr) {
         runtimeVersion = OpenSSL_version_num();
