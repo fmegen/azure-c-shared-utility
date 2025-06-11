@@ -27,7 +27,7 @@
 #include "azure_c_shared_utility/gballoc.h"
 #include "azure_c_shared_utility/const_defines.h"
 #include "azure_c_shared_utility/platform.h" // for http proxy settings
-
+#include <sys/time.h> // for struct timeval
 
 typedef enum TLSIO_STATE_TAG
 {
@@ -79,6 +79,12 @@ typedef struct TLS_IO_INSTANCE_TAG
     void* tls_validation_callback_data;
     char* hostname;
     bool ignore_host_name_check;
+    
+    // OCSP options
+    bool use_ocsp_primary;                // Use OCSP as primary validation
+    bool require_ocsp;                    // Require OCSP validation to succeed
+    bool fallback_to_crl;                 // Fall back to CRL if OCSP fails
+    int ocsp_timeout_seconds;             // Timeout for OCSP requests
 } TLS_IO_INSTANCE;
 
 struct CRYPTO_dynlock_value
@@ -87,6 +93,10 @@ struct CRYPTO_dynlock_value
 };
 
 static const char* const OPTION_UNDERLYING_IO_OPTIONS = "underlying_io_options";
+static const char* const OPTION_USE_OCSP_PRIMARY = "use_ocsp_primary";
+static const char* const OPTION_REQUIRE_OCSP = "require_ocsp";
+static const char* const OPTION_FALLBACK_TO_CRL = "fallback_to_crl";
+static const char* const OPTION_OCSP_TIMEOUT_SECONDS = "ocsp_timeout_seconds";
 #define SSL_DO_HANDSHAKE_SUCCESS 1
 static int g_ssl_crl_max_size_in_kb = 10 * 1024;
 
@@ -205,7 +215,10 @@ static void* tlsio_openssl_CloneOption(const char* name, const void* value)
         }
         else if (strcmp(name, OPTION_DISABLE_CRL_CHECK) == 0 ||
             strcmp(name, OPTION_DISABLE_DEFAULT_VERIFY_PATHS) == 0 ||
-            strcmp(name, OPTION_CONTINUE_ON_CRL_DOWNLOAD_FAILURE) == 0)
+            strcmp(name, OPTION_CONTINUE_ON_CRL_DOWNLOAD_FAILURE) == 0 ||
+            strcmp(name, OPTION_USE_OCSP_PRIMARY) == 0 ||
+            strcmp(name, OPTION_REQUIRE_OCSP) == 0 ||
+            strcmp(name, OPTION_FALLBACK_TO_CRL) == 0)
         {
             bool bool_value = *(bool*)value;
             bool* value_clone = (bool*)malloc(sizeof(bool));
@@ -213,6 +226,22 @@ static void* tlsio_openssl_CloneOption(const char* name, const void* value)
             if (value_clone)
             {
                 *value_clone = bool_value;
+            }
+            else
+            {
+                LogError("Failed cloning %s option", name);
+            }
+
+            result = value_clone;
+        }
+        else if (strcmp(name, OPTION_OCSP_TIMEOUT_SECONDS) == 0)
+        {
+            int int_value = *(int*)value;
+            int* value_clone = (int*)malloc(sizeof(int));
+
+            if (value_clone)
+            {
+                *value_clone = int_value;
             }
             else
             {
@@ -266,6 +295,16 @@ static void tlsio_openssl_DestroyOption(const char* name, const void* value)
             )
         {
             // nothing to free.
+        }
+        else if (strcmp(name, OPTION_DISABLE_CRL_CHECK) == 0 ||
+            strcmp(name, OPTION_DISABLE_DEFAULT_VERIFY_PATHS) == 0 ||
+            strcmp(name, OPTION_CONTINUE_ON_CRL_DOWNLOAD_FAILURE) == 0 ||
+            strcmp(name, OPTION_USE_OCSP_PRIMARY) == 0 ||
+            strcmp(name, OPTION_REQUIRE_OCSP) == 0 ||
+            strcmp(name, OPTION_FALLBACK_TO_CRL) == 0 ||
+            strcmp(name, OPTION_OCSP_TIMEOUT_SECONDS) == 0)
+        {
+            free((void*)value);
         }
         else if (strcmp(name, OPTION_UNDERLYING_IO_OPTIONS) == 0)
         {
@@ -364,6 +403,42 @@ static OPTIONHANDLER_HANDLE tlsio_openssl_retrieveoptions(CONCRETE_IO_HANDLE han
                 if (OptionHandler_AddOption(result, OPTION_DISABLE_DEFAULT_VERIFY_PATHS, &tls_io_instance->disable_default_verify_paths) != OPTIONHANDLER_OK)
                 {
                     LogError("unable to save %s option", OPTION_DISABLE_DEFAULT_VERIFY_PATHS);
+                    OptionHandler_Destroy(result);
+                    result = NULL;
+                }
+            }
+            else if (!tls_io_instance->use_ocsp_primary) // Only add if not the default (true)
+            {
+                if (OptionHandler_AddOption(result, OPTION_USE_OCSP_PRIMARY, &tls_io_instance->use_ocsp_primary) != OPTIONHANDLER_OK)
+                {
+                    LogError("unable to save %s option", OPTION_USE_OCSP_PRIMARY);
+                    OptionHandler_Destroy(result);
+                    result = NULL;
+                }
+            }
+            else if (tls_io_instance->require_ocsp) // Only add if not the default (false)
+            {
+                if (OptionHandler_AddOption(result, OPTION_REQUIRE_OCSP, &tls_io_instance->require_ocsp) != OPTIONHANDLER_OK)
+                {
+                    LogError("unable to save %s option", OPTION_REQUIRE_OCSP);
+                    OptionHandler_Destroy(result);
+                    result = NULL;
+                }
+            }
+            else if (!tls_io_instance->fallback_to_crl) // Only add if not the default (true)
+            {
+                if (OptionHandler_AddOption(result, OPTION_FALLBACK_TO_CRL, &tls_io_instance->fallback_to_crl) != OPTIONHANDLER_OK)
+                {
+                    LogError("unable to save %s option", OPTION_FALLBACK_TO_CRL);
+                    OptionHandler_Destroy(result);
+                    result = NULL;
+                }
+            }
+            else if (tls_io_instance->ocsp_timeout_seconds != 10) // Only add if not the default (10)
+            {
+                if (OptionHandler_AddOption(result, OPTION_OCSP_TIMEOUT_SECONDS, &tls_io_instance->ocsp_timeout_seconds) != OPTIONHANDLER_OK)
+                {
+                    LogError("unable to save %s option", OPTION_OCSP_TIMEOUT_SECONDS);
                     OptionHandler_Destroy(result);
                     result = NULL;
                 }
@@ -1078,6 +1153,392 @@ static bool crl_valid(X509_CRL *crl)
 static LOCK_HANDLE crl_cache_lock;
 static int crl_cache_size = 0;
 static X509_CRL** crl_cache = NULL;
+static int tls_io_instance_index = -1;
+
+// Helper function to extract OCSP responder URL from certificate
+static char* get_ocsp_url(X509 *cert)
+{
+    if (!cert) {
+        return NULL;
+    }
+
+    STACK_OF(ACCESS_DESCRIPTION) *info;
+    info = X509_get_ext_d2i(cert, NID_info_access, NULL, NULL);
+    if (!info) {
+        return NULL;
+    }
+    
+    char *url = NULL;
+    for (int i = 0; i < sk_ACCESS_DESCRIPTION_num(info); i++) {
+        ACCESS_DESCRIPTION *ad = sk_ACCESS_DESCRIPTION_value(info, i);
+        if (OBJ_obj2nid(ad->method) == NID_ad_OCSP) {
+            if (ad->location->type == GEN_URI) {
+                ASN1_STRING *uri = ad->location->d.uniformResourceIdentifier;
+                url = malloc(ASN1_STRING_length(uri) + 1);
+                if (url) {
+                    memcpy(url, ASN1_STRING_get0_data(uri), ASN1_STRING_length(uri));
+                    url[ASN1_STRING_length(uri)] = '\0';
+                }
+                break;
+            }
+        }
+    }
+    
+    sk_ACCESS_DESCRIPTION_pop_free(info, ACCESS_DESCRIPTION_free);
+    return url;
+}
+
+// Get issuer certificate from store
+static X509* get_issuer_certificate(X509 *cert, SSL *ssl)
+{
+    if (!cert || !ssl) {
+        return NULL;
+    }
+
+    X509 *issuer = NULL;
+    
+    // Try to get issuer from certificate store
+    X509_STORE *store = SSL_CTX_get_cert_store(SSL_get_SSL_CTX(ssl));
+    if (!store) {
+        return NULL;
+    }
+    
+    X509_STORE_CTX *store_ctx = X509_STORE_CTX_new();
+    if (!store_ctx) {
+        return NULL;
+    }
+    
+    if (X509_STORE_CTX_init(store_ctx, store, cert, NULL) != 1) {
+        X509_STORE_CTX_free(store_ctx);
+        return NULL;
+    }
+    
+    if (X509_STORE_CTX_get1_issuer(&issuer, store_ctx, cert) != 1) {
+        X509_STORE_CTX_free(store_ctx);
+        return NULL;
+    }
+    
+    X509_STORE_CTX_free(store_ctx);
+    return issuer;
+}
+
+// Create OCSP request for a certificate
+static OCSP_REQUEST* create_ocsp_request(X509 *cert, X509 *issuer)
+{
+    if (!cert || !issuer) {
+        return NULL;
+    }
+
+    OCSP_REQUEST *req = OCSP_REQUEST_new();
+    if (!req) {
+        return NULL;
+    }
+    
+    OCSP_CERTID *cert_id = OCSP_cert_to_id(NULL, cert, issuer);
+    if (!cert_id) {
+        OCSP_REQUEST_free(req);
+        return NULL;
+    }
+    
+    if (!OCSP_request_add0_id(req, cert_id)) {
+        OCSP_REQUEST_free(req);
+        return NULL;
+    }
+    
+    // Add nonce to prevent replay attacks
+    OCSP_request_add1_nonce(req, NULL, -1);
+    
+    return req;
+}
+
+// Send OCSP request to server and get response
+static OCSP_RESPONSE* send_ocsp_request(const char *url, OCSP_REQUEST *req, int timeout_seconds)
+{
+    if (!url || !req) {
+        return NULL;
+    }
+
+    OCSP_RESPONSE *resp = NULL;
+    BIO *bio = NULL;
+    
+    // Parse URL
+    char *host = NULL, *port = NULL, *path = NULL;
+    int use_ssl;
+    
+    if (!OCSP_parse_url((char*)url, &host, &port, &path, &use_ssl)) {
+        return NULL;
+    }
+    
+    // Create BIO connection
+    bio = BIO_new_connect(host);
+    if (!bio || !BIO_set_conn_port(bio, port)) {
+        goto cleanup;
+    }
+    
+    // Set timeout
+    if (timeout_seconds > 0) {
+        struct timeval tv;
+        tv.tv_sec = timeout_seconds;
+        tv.tv_usec = 0;
+        BIO_ctrl(bio, BIO_CTRL_DGRAM_SET_RECV_TIMEOUT, 0, &tv);
+    }
+    
+    // Establish connection
+    if (BIO_do_connect(bio) <= 0) {
+        goto cleanup;
+    }
+    
+    // Create SSL connection if needed
+    if (use_ssl) {
+        SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
+        if (!ctx) {
+            goto cleanup;
+        }
+        
+        BIO *ssl_bio = BIO_new_ssl(ctx, 1);
+        if (!ssl_bio) {
+            SSL_CTX_free(ctx);
+            goto cleanup;
+        }
+        
+        BIO_push(ssl_bio, bio);
+        bio = ssl_bio;
+    }
+    
+    // Send request
+    resp = OCSP_sendreq_bio(bio, path, req);
+    
+cleanup:
+    if (host) OPENSSL_free(host);
+    if (port) OPENSSL_free(port);
+    if (path) OPENSSL_free(path);
+    if (bio) BIO_free_all(bio);
+    
+    return resp;
+}
+
+// Validate OCSP response for a certificate
+static int validate_ocsp_response_object(X509 *cert, X509 *issuer, OCSP_RESPONSE *resp)
+{
+    if (!cert || !issuer || !resp) {
+        LogError("Invalid parameters for OCSP validation");
+        return 0;
+    }
+
+    int status = OCSP_response_status(resp);
+    if (status != OCSP_RESPONSE_STATUS_SUCCESSFUL) {
+        LogError("OCSP response error: %d", status);
+        return 0;
+    }
+    
+    OCSP_BASICRESP *basic = OCSP_response_get1_basic(resp);
+    if (!basic) {
+        LogError("Failed to get basic OCSP response");
+        return 0;
+    }
+    
+    // Create certificate ID
+    OCSP_CERTID *cert_id = OCSP_cert_to_id(NULL, cert, issuer);
+    if (!cert_id) {
+        OCSP_BASICRESP_free(basic);
+        return 0;
+    }
+    
+    // Find certificate status
+    int cert_status, reason;
+    ASN1_GENERALIZEDTIME *revtime = NULL, *thisupd = NULL, *nextupd = NULL;
+    
+    if (!OCSP_resp_find_status(basic, cert_id, &cert_status, &reason, 
+                               &revtime, &thisupd, &nextupd)) {
+        LogError("Failed to find certificate status");
+        OCSP_CERTID_free(cert_id);
+        OCSP_BASICRESP_free(basic);
+        return 0;
+    }
+    
+    // Check if response is current (allow 5 minutes clock skew)
+    if (!OCSP_check_validity(thisupd, nextupd, 300, -1)) {
+        LogError("OCSP response is not current");
+        OCSP_CERTID_free(cert_id);
+        OCSP_BASICRESP_free(basic);
+        return 0;
+    }
+    
+    int result = (cert_status == V_OCSP_CERTSTATUS_GOOD);
+    
+    OCSP_CERTID_free(cert_id);
+    OCSP_BASICRESP_free(basic);
+    
+    return result;
+}
+
+// Validate DER-encoded OCSP response
+static int validate_ocsp_response(SSL *ssl, const unsigned char *resp_der, int resp_der_len)
+{
+    if (!ssl || !resp_der || resp_der_len <= 0) {
+        return 0;
+    }
+
+    OCSP_RESPONSE *resp = d2i_OCSP_RESPONSE(NULL, &resp_der, resp_der_len);
+    if (!resp) {
+        LogError("Failed to parse OCSP response");
+        return 0;
+    }
+    
+    X509 *cert = SSL_get_peer_certificate(ssl);
+    if (!cert) {
+        LogError("Failed to get peer certificate");
+        OCSP_RESPONSE_free(resp);
+        return 0;
+    }
+    
+    X509 *issuer = get_issuer_certificate(cert, ssl);
+    if (!issuer) {
+        LogError("Failed to get issuer certificate");
+        X509_free(cert);
+        OCSP_RESPONSE_free(resp);
+        return 0;
+    }
+    
+    int result = validate_ocsp_response_object(cert, issuer, resp);
+    
+    X509_free(issuer);
+    X509_free(cert);
+    OCSP_RESPONSE_free(resp);
+    
+    return result;
+}
+
+// Fetch and validate OCSP for a certificate
+static int fetch_and_validate_ocsp(SSL *ssl)
+{
+    if (!ssl) {
+        return 0;
+    }
+
+    TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)SSL_get_ex_data(ssl, tls_io_instance_index);
+    if (!tls_io_instance) {
+        LogError("Failed to get TLS_IO_INSTANCE from SSL object");
+        return 0;
+    }
+    
+    X509 *cert = SSL_get_peer_certificate(ssl);
+    if (!cert) {
+        LogError("Failed to get peer certificate");
+        return 0;
+    }
+    
+    X509 *issuer = get_issuer_certificate(cert, ssl);
+    if (!issuer) {
+        LogError("Failed to get issuer certificate");
+        X509_free(cert);
+        return 0;
+    }
+    
+    // Get OCSP responder URL from certificate
+    char *ocsp_url = get_ocsp_url(cert);
+    if (!ocsp_url) {
+        LogError("No OCSP responder URL in certificate");
+        X509_free(issuer);
+        X509_free(cert);
+        return 0;
+    }
+    
+    // Create OCSP request
+    OCSP_REQUEST *req = create_ocsp_request(cert, issuer);
+    if (!req) {
+        LogError("Failed to create OCSP request");
+        free(ocsp_url);
+        X509_free(issuer);
+        X509_free(cert);
+        return 0;
+    }
+    
+    // Send request and get response
+    OCSP_RESPONSE *resp = send_ocsp_request(ocsp_url, req, tls_io_instance->ocsp_timeout_seconds);
+    OCSP_REQUEST_free(req);
+    free(ocsp_url);
+    
+    if (!resp) {
+        LogError("Failed to get OCSP response");
+        X509_free(issuer);
+        X509_free(cert);
+        return 0;
+    }
+    
+    // Validate response
+    int result = validate_ocsp_response_object(cert, issuer, resp);
+    
+    // Clean up
+    OCSP_RESPONSE_free(resp);
+    X509_free(issuer);
+    X509_free(cert);
+    
+    return result;
+}
+
+// OCSP stapling callback function
+static int ocsp_status_callback(SSL *ssl, void *arg)
+{
+    TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)arg;
+    
+    // Try to get stapled OCSP response first
+    const unsigned char *stapled_resp = NULL;
+    int stapled_resp_len = SSL_get_tlsext_status_ocsp_resp(ssl, &stapled_resp);
+    
+    // If stapled response exists and is valid, use it
+    if (stapled_resp_len > 0) {
+        LogInfo("Stapled OCSP response found, validating...");
+        if (validate_ocsp_response(ssl, stapled_resp, stapled_resp_len)) {
+            LogInfo("Certificate validated via stapled OCSP response");
+            return 1; // Success
+        }
+        LogInfo("Stapled OCSP response invalid, will try active OCSP");
+    } else {
+        LogInfo("No stapled OCSP response, will try active OCSP");
+    }
+    
+    // No valid stapled response, try active OCSP
+    if (fetch_and_validate_ocsp(ssl)) {
+        LogInfo("Certificate validated via active OCSP check");
+        return 1; // Success
+    }
+    
+    // If OCSP is required but failed, fail validation
+    if (tls_io_instance->require_ocsp) {
+        LogError("OCSP validation failed and is required");
+        return 0; // Fail
+    }
+    
+    // Fall back to CRL if enabled
+    if (tls_io_instance->fallback_to_crl) {
+        LogInfo("Falling back to CRL validation");
+        return 1; // Continue with CRL validation
+    }
+    
+    // No validation method succeeded, but OCSP wasn't required
+    LogInfo("OCSP validation failed but not required");
+    return 1; // Allow connection to proceed
+}
+
+// Setup OCSP validation
+static int setup_ocsp_validation(TLS_IO_INSTANCE* tls_io_instance)
+{
+    if (!tls_io_instance || !tls_io_instance->ssl_context) {
+        LogError("Can't access the ssl_context.");
+        return -1;
+    }
+
+    // Enable OCSP stapling client-side support
+    SSL_CTX_set_tlsext_status_type(tls_io_instance->ssl_context, TLSEXT_STATUSTYPE_ocsp);
+    
+    // Set callback that handles both stapled and non-stapled OCSP
+    SSL_CTX_set_tlsext_status_cb(tls_io_instance->ssl_context, ocsp_status_callback);
+    SSL_CTX_set_tlsext_status_arg(tls_io_instance->ssl_context, tls_io_instance);
+    
+    return 0;
+}
+
 static int load_cert_crl_memory(X509 *cert, X509_CRL **pCrl)
 {
     X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
@@ -2045,6 +2506,11 @@ static int create_openssl_instance(TLS_IO_INSTANCE* tlsInstance)
         log_ERR_get_error("unable to set up CRL check.");
         result = __FAILURE__;
     }
+    else if (tlsInstance->use_ocsp_primary && setup_ocsp_validation(tlsInstance) != 0)
+    {
+        log_ERR_get_error("unable to set up OCSP validation.");
+        result = __FAILURE__;
+    }
     else if (
         (tlsInstance->certificate != NULL) &&
         add_certificate_to_store(tlsInstance, tlsInstance->certificate) != 0)
@@ -2129,6 +2595,17 @@ static int create_openssl_instance(TLS_IO_INSTANCE* tlsInstance)
                         log_ERR_get_error("Failed creating OpenSSL instance.");
                         result = __FAILURE__;
                     }
+                    else if (SSL_set_ex_data(tlsInstance->ssl, tls_io_instance_index, tlsInstance) != 1)
+                    {
+                        (void)BIO_free(tlsInstance->in_bio);
+                        (void)BIO_free(tlsInstance->out_bio);
+                        SSL_free(tlsInstance->ssl);
+                        tlsInstance->ssl = NULL;
+                        SSL_CTX_free(tlsInstance->ssl_context);
+                        tlsInstance->ssl_context = NULL;
+                        log_ERR_get_error("Failed to store TLS_IO_INSTANCE in SSL object.");
+                        result = __FAILURE__;
+                    }
                     else if (SSL_set_tlsext_host_name(tlsInstance->ssl, tlsInstance->hostname) != 1)
                     {
                         SSL_free(tlsInstance->ssl);
@@ -2168,6 +2645,15 @@ static int create_openssl_instance(TLS_IO_INSTANCE* tlsInstance)
 int tlsio_openssl_init(void)
 {
     crl_cache_lock = Lock_Init();
+    
+    // Create an index for storing TLS_IO_INSTANCE in the SSL object
+    if (tls_io_instance_index == -1) {
+        tls_io_instance_index = SSL_get_ex_new_index(0, NULL, NULL, NULL, NULL);
+        if (tls_io_instance_index == -1) {
+            LogError("Failed to create SSL index for TLS_IO_INSTANCE");
+            return __FAILURE__;
+        }
+    }
 
 #if defined(USE_OPENSSL_DYNAMIC)
     if (load_libssl())
@@ -2304,6 +2790,12 @@ CONCRETE_IO_HANDLE tlsio_openssl_create(void* io_create_parameters)
                     result->disable_crl_check = false;
                     result->continue_on_crl_download_failure = false;
                     result->disable_default_verify_paths = false;
+                    
+                    // Initialize OCSP defaults
+                    result->use_ocsp_primary = true;      // Use OCSP by default
+                    result->require_ocsp = false;         // Don't require OCSP
+                    result->fallback_to_crl = true;       // Fall back to CRL by default
+                    result->ocsp_timeout_seconds = 10;    // 10 second timeout
 
                     result->underlying_io = xio_create(underlying_io_interface, io_interface_parameters);
                     if (result->underlying_io == NULL)
@@ -2763,6 +3255,58 @@ int tlsio_openssl_setoption(CONCRETE_IO_HANDLE tls_io, const char* optionName, c
             else
             {
                 tls_io_instance->disable_default_verify_paths = *(const bool*)value;
+                result = 0;
+            }
+        }
+        else if (strcmp(OPTION_USE_OCSP_PRIMARY, optionName) == 0)
+        {
+            if (tls_io_instance->ssl_context != NULL)
+            {
+                LogError("Unable to set the %s option after the TLS connection is established", optionName);
+                result = __FAILURE__;
+            }
+            else
+            {
+                tls_io_instance->use_ocsp_primary = *(const bool*)value;
+                result = 0;
+            }
+        }
+        else if (strcmp(OPTION_REQUIRE_OCSP, optionName) == 0)
+        {
+            if (tls_io_instance->ssl_context != NULL)
+            {
+                LogError("Unable to set the %s option after the TLS connection is established", optionName);
+                result = __FAILURE__;
+            }
+            else
+            {
+                tls_io_instance->require_ocsp = *(const bool*)value;
+                result = 0;
+            }
+        }
+        else if (strcmp(OPTION_FALLBACK_TO_CRL, optionName) == 0)
+        {
+            if (tls_io_instance->ssl_context != NULL)
+            {
+                LogError("Unable to set the %s option after the TLS connection is established", optionName);
+                result = __FAILURE__;
+            }
+            else
+            {
+                tls_io_instance->fallback_to_crl = *(const bool*)value;
+                result = 0;
+            }
+        }
+        else if (strcmp(OPTION_OCSP_TIMEOUT_SECONDS, optionName) == 0)
+        {
+            if (tls_io_instance->ssl_context != NULL)
+            {
+                LogError("Unable to set the %s option after the TLS connection is established", optionName);
+                result = __FAILURE__;
+            }
+            else
+            {
+                tls_io_instance->ocsp_timeout_seconds = *(const int*)value;
                 result = 0;
             }
         }
