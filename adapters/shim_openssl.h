@@ -151,9 +151,6 @@
     REQUIRED_FUNCTION(SSL_CTX_set_cert_verify_callback) \
     REQUIRED_FUNCTION(SSL_CTX_set_default_verify_paths) \
     REQUIRED_FUNCTION(SSL_CTX_set_verify) \
-    REQUIRED_FUNCTION(SSL_CTX_set_tlsext_status_arg) \
-    REQUIRED_FUNCTION(SSL_CTX_set_tlsext_status_cb) \
-    REQUIRED_FUNCTION(SSL_CTX_set_tlsext_status_type) \
     REQUIRED_FUNCTION(SSL_CTX_use_PrivateKey) \
     REQUIRED_FUNCTION(SSL_CTX_use_RSAPrivateKey) \
     REQUIRED_FUNCTION(SSL_CTX_use_certificate) \
@@ -161,7 +158,6 @@
     REQUIRED_FUNCTION(SSL_do_handshake) \
     REQUIRED_FUNCTION(SSL_free) \
     REQUIRED_FUNCTION(SSL_get_error) \
-    REQUIRED_FUNCTION(SSL_get_tlsext_status_ocsp_resp) \
     REQUIRED_FUNCTION_1_0_2(SSL_library_init) \
     REQUIRED_FUNCTION_1_0_2(SSL_load_error_strings) \
     REQUIRED_FUNCTION(SSL_new) \
