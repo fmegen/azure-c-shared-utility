@@ -1185,6 +1185,13 @@ static char* get_ocsp_url(X509 *cert)
     }
     
     sk_ACCESS_DESCRIPTION_pop_free(info, ACCESS_DESCRIPTION_free);
+    if (!url) {
+        LogError("No OCSP URL found in certificate");
+        return NULL;
+    }
+    else {
+        LogInfo("OCSP URL found: %s", url);
+    }
     return url;
 }
 
@@ -1231,23 +1238,28 @@ static OCSP_REQUEST* create_ocsp_request(X509 *cert, X509 *issuer)
 
     OCSP_REQUEST *req = OCSP_REQUEST_new();
     if (!req) {
+        LogError("Failed to create OCSP request");
         return NULL;
     }
     
     OCSP_CERTID *cert_id = OCSP_cert_to_id(NULL, cert, issuer);
     if (!cert_id) {
         OCSP_REQUEST_free(req);
+        LogError("Failed to create OCSP certificate ID");
         return NULL;
     }
     
     if (!OCSP_request_add0_id(req, cert_id)) {
         OCSP_REQUEST_free(req);
+        OCSP_CERTID_free(cert_id);
+        LogError("Failed to add OCSP certificate ID to request");
         return NULL;
     }
     
     // Add nonce to prevent replay attacks
     OCSP_request_add1_nonce(req, NULL, -1);
     
+    LogInfo("OCSP request created for certificate: %s", X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0));
     return req;
 }
 
@@ -1272,6 +1284,7 @@ static OCSP_RESPONSE* send_ocsp_request(const char *url, OCSP_REQUEST *req, int 
     // Create BIO connection
     bio = BIO_new_connect(host);
     if (!bio || !BIO_set_conn_port(bio, port)) {
+        LogError("Failed to create BIO connection to %s:%s", host, port);
         goto cleanup;
     }
     
@@ -1285,6 +1298,7 @@ static OCSP_RESPONSE* send_ocsp_request(const char *url, OCSP_REQUEST *req, int 
     
     // Establish connection
     if (BIO_do_connect(bio) <= 0) {
+        LogError("Failed to connect to %s:%s", host, port);
         goto cleanup;
     }
     
@@ -1292,12 +1306,14 @@ static OCSP_RESPONSE* send_ocsp_request(const char *url, OCSP_REQUEST *req, int 
     if (use_ssl) {
         SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
         if (!ctx) {
+            LogError("Failed to create SSL context");
             goto cleanup;
         }
         
         BIO *ssl_bio = BIO_new_ssl(ctx, 1);
         if (!ssl_bio) {
             SSL_CTX_free(ctx);
+            LogError("Failed to create SSL BIO");
             goto cleanup;
         }
         
@@ -1305,6 +1321,7 @@ static OCSP_RESPONSE* send_ocsp_request(const char *url, OCSP_REQUEST *req, int 
         bio = ssl_bio;
     }
     
+    LogInfo("Sending OCSP request to %s", url);
     // Send request
     resp = OCSP_sendreq_bio(bio, path, req);
     
@@ -1341,6 +1358,7 @@ static int validate_ocsp_response_object(X509 *cert, X509 *issuer, OCSP_RESPONSE
     OCSP_CERTID *cert_id = OCSP_cert_to_id(NULL, cert, issuer);
     if (!cert_id) {
         OCSP_BASICRESP_free(basic);
+        LogError("Failed to create OCSP certificate ID");
         return 0;
     }
     
@@ -1369,6 +1387,11 @@ static int validate_ocsp_response_object(X509 *cert, X509 *issuer, OCSP_RESPONSE
     OCSP_CERTID_free(cert_id);
     OCSP_BASICRESP_free(basic);
     
+    if (result) {
+        LogInfo("OCSP response is valid for certificate: %s", X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0));
+    } else {
+        LogError("OCSP response indicates certificate is not valid");
+    } 
     return result;
 }
 
@@ -1474,6 +1497,11 @@ static int fetch_and_validate_ocsp(SSL *ssl)
     X509_free(issuer);
     X509_free(cert);
     
+    if (!result) {
+        LogError("OCSP validation failed for certificate: %s", X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0));
+    } else {
+        LogInfo("OCSP validation succeeded for certificate: %s", X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0));
+    }
     return result;
 }
 
