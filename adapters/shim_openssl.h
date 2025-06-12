@@ -151,6 +151,9 @@
     REQUIRED_FUNCTION(SSL_CTX_set_cert_verify_callback) \
     REQUIRED_FUNCTION(SSL_CTX_set_default_verify_paths) \
     REQUIRED_FUNCTION(SSL_CTX_set_verify) \
+    REQUIRED_FUNCTION(SSL_CTX_set_tlsext_status_arg) \
+    REQUIRED_FUNCTION(SSL_CTX_set_tlsext_status_cb) \
+    REQUIRED_FUNCTION(SSL_CTX_set_tlsext_status_type) \
     REQUIRED_FUNCTION(SSL_CTX_use_PrivateKey) \
     REQUIRED_FUNCTION(SSL_CTX_use_RSAPrivateKey) \
     REQUIRED_FUNCTION(SSL_CTX_use_certificate) \
@@ -158,6 +161,7 @@
     REQUIRED_FUNCTION(SSL_do_handshake) \
     REQUIRED_FUNCTION(SSL_free) \
     REQUIRED_FUNCTION(SSL_get_error) \
+    REQUIRED_FUNCTION(SSL_get_tlsext_status_ocsp_resp) \
     REQUIRED_FUNCTION_1_0_2(SSL_library_init) \
     REQUIRED_FUNCTION_1_0_2(SSL_load_error_strings) \
     REQUIRED_FUNCTION(SSL_new) \
@@ -182,6 +186,7 @@
     REQUIRED_FUNCTION_NOT_3_0_X(X509_NAME_hash) \
     REQUIRED_FUNCTION_3_0_X(X509_NAME_hash_ex) \
     REQUIRED_FUNCTION(X509_STORE_CTX_get_current_cert) \
+    REQUIRED_FUNCTION(X509_STORE_CTX_get1_issuer) \
     REQUIRED_FUNCTION(X509_STORE_add_cert) \
     REQUIRED_FUNCTION_1_1_0(X509_STORE_get0_param) \
     REQUIRED_FUNCTION(X509_STORE_set_flags) \
@@ -192,6 +197,8 @@
     REQUIRED_FUNCTION(X509_get_ext_d2i) \
     REQUIRED_FUNCTION(X509_get_issuer_name) \
     REQUIRED_FUNCTION(X509_get_subject_name) \
+    REQUIRED_FUNCTION(X509_get1_ocsp) \
+    REQUIRED_FUNCTION(X509_email_free) \
     REQUIRED_FUNCTION_1_0_2(sk_free) \
     REQUIRED_FUNCTION_1_0_2(sk_new_null) \
     REQUIRED_FUNCTION_1_0_2(sk_num) \
@@ -287,6 +294,9 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define SSL_CTX_set_cert_verify_callback SSL_CTX_set_cert_verify_callback_ptr
 #define SSL_CTX_set_default_verify_paths SSL_CTX_set_default_verify_paths_ptr
 #define SSL_CTX_set_verify SSL_CTX_set_verify_ptr
+#define SSL_CTX_set_tlsext_status_arg SSL_CTX_set_tlsext_status_arg_ptr
+#define SSL_CTX_set_tlsext_status_cb SSL_CTX_set_tlsext_status_cb_ptr
+#define SSL_CTX_set_tlsext_status_type SSL_CTX_set_tlsext_status_type_ptr
 #define SSL_CTX_use_PrivateKey SSL_CTX_use_PrivateKey_ptr
 #define SSL_CTX_use_RSAPrivateKey SSL_CTX_use_RSAPrivateKey_ptr
 #define SSL_CTX_use_certificate SSL_CTX_use_certificate_ptr
@@ -294,6 +304,7 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define SSL_do_handshake SSL_do_handshake_ptr
 #define SSL_free SSL_free_ptr
 #define SSL_get_error SSL_get_error_ptr
+#define SSL_get_tlsext_status_ocsp_resp SSL_get_tlsext_status_ocsp_resp_ptr
 #define SSL_new SSL_new_ptr
 #define SSL_read SSL_read_ptr
 #define SSL_set_bio SSL_set_bio_ptr
@@ -302,6 +313,7 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define X509_CRL_free X509_CRL_free_ptr
 #define X509_NAME_cmp X509_NAME_cmp_ptr
 #define X509_STORE_CTX_get_current_cert X509_STORE_CTX_get_current_cert_ptr
+#define X509_STORE_CTX_get1_issuer X509_STORE_CTX_get1_issuer_ptr
 #define X509_STORE_add_cert X509_STORE_add_cert_ptr
 #define X509_STORE_set_flags X509_STORE_set_flags_ptr
 #define X509_VERIFY_PARAM_get_flags X509_VERIFY_PARAM_get_flags_ptr
@@ -309,6 +321,8 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define X509_get_ext_d2i X509_get_ext_d2i_ptr
 #define X509_get_issuer_name X509_get_issuer_name_ptr
 #define X509_get_subject_name X509_get_subject_name_ptr
+#define X509_get1_ocsp X509_get1_ocsp_ptr
+#define X509_email_free X509_email_free_ptr
 #define X509_VERIFY_PARAM_set_hostflags X509_VERIFY_PARAM_set_hostflags_ptr
 #define X509_VERIFY_PARAM_set1_host X509_VERIFY_PARAM_set1_host_ptr
 #define SSL_set_verify SSL_set_verify_ptr
@@ -403,11 +417,13 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #if !USE_OPENSSL_3_0_X
 #define sk_GENERAL_NAME_num(stack) OPENSSL_sk_num((const OPENSSL_STACK*)(1 ? stack : (const STACK_OF(GENERAL_NAME)*)0))
 #define sk_DIST_POINT_num(stack) OPENSSL_sk_num((const OPENSSL_STACK*)(1 ? stack : (const STACK_OF(DIST_POINT)*)0))
+#define sk_OPENSSL_STRING_num(stack) OPENSSL_sk_num((const OPENSSL_STACK*)(1 ? stack : (const STACK_OF(OPENSSL_STRING)*)0))
 
 #define sk_X509_CRL_new_null() (STACK_OF(X509_CRL)*)OPENSSL_sk_new_null()
 
 #define sk_GENERAL_NAME_value(stack, idx) (GENERAL_NAME*)OPENSSL_sk_value((const OPENSSL_STACK*)(1 ? stack : (const STACK_OF(GENERAL_NAME)*)0), idx)
 #define sk_DIST_POINT_value(stack, idx) (DIST_POINT*)OPENSSL_sk_value((const OPENSSL_STACK*)(1 ? stack : (const STACK_OF(DIST_POINT)*)0), idx)
+#define sk_OPENSSL_STRING_value(stack, idx) (char*)OPENSSL_sk_value((const OPENSSL_STACK*)(1 ? stack : (const STACK_OF(OPENSSL_STRING)*)0), idx)
 
 #define sk_X509_CRL_free(stack) OPENSSL_sk_free((OPENSSL_STACK*)(1 ? stack : (STACK_OF(X509_CRL)*)0))
 #define sk_X509_free(stack) OPENSSL_sk_free((OPENSSL_STACK*)(1 ? stack : (STACK_OF(X509)*)0))
