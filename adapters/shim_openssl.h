@@ -42,6 +42,7 @@
 #include "openssl/crypto.h"
 #undef OCSP_REQUEST
 #undef OCSP_RESPONSE
+#include "openssl/opensslconf.h"
 #include "openssl/ocsp.h"
 #include "openssl/x509v3.h"
 #include "openssl/asn1.h"
@@ -101,6 +102,13 @@
     REQUIRED_FUNCTION_1_0_2(EVP_cleanup) \
     REQUIRED_FUNCTION_1_0_2(FIPS_mode_set) \
     REQUIRED_FUNCTION(GENERAL_NAME_get0_value) \
+    REQUIRED_FUNCTION(OCSP_BASICRESP_free) \
+    REQUIRED_FUNCTION(OCSP_CERTID_free) \
+    REQUIRED_FUNCTION(OCSP_REQUEST_free) \
+    REQUIRED_FUNCTION(OCSP_REQUEST_new) \
+    REQUIRED_FUNCTION(OCSP_RESPONSE_free) \
+    REQUIRED_FUNCTION(OCSP_cert_to_id) \
+    REQUIRED_FUNCTION(OCSP_check_validity) \
     REQUIRED_FUNCTION_NOT_3_0_X(OCSP_REQ_CTX_add1_header) \
     REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_add1_header) \
     REQUIRED_FUNCTION_NOT_3_0_X(OCSP_REQ_CTX_free) \
@@ -112,6 +120,12 @@
     REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_new) \
     REQUIRED_FUNCTION_NOT_3_0_X(OCSP_parse_url) \
     REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_parse_url) \
+    REQUIRED_FUNCTION(OCSP_request_add0_id) \
+    REQUIRED_FUNCTION(OCSP_request_add1_nonce) \
+    REQUIRED_FUNCTION(OCSP_resp_find_status) \
+    REQUIRED_FUNCTION(OCSP_response_get1_basic) \
+    REQUIRED_FUNCTION(OCSP_response_status) \
+    REQUIRED_FUNCTION(OCSP_sendreq_bio) \
     REQUIRED_FUNCTION_NOT_3_0_X(OCSP_set_max_response_length) \
     REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_set_max_response_length) \
     REQUIRED_FUNCTION_1_0_2(OPENSSL_add_all_algorithms_noconf) \
@@ -184,6 +198,7 @@
     REQUIRED_FUNCTION_1_0_2(sk_pop_free) \
     REQUIRED_FUNCTION_1_0_2(sk_push) \
     REQUIRED_FUNCTION_1_0_2(sk_value) \
+    REQUIRED_FUNCTION(d2i_OCSP_RESPONSE) \
     REQUIRED_FUNCTION(d2i_X509_CRL_bio) \
     REQUIRED_FUNCTION(i2d_X509_CRL_bio) \
     REQUIRED_FUNCTION(X509_VERIFY_PARAM_set_hostflags) \
@@ -246,6 +261,19 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define EVP_PKEY_free EVP_PKEY_free_ptr
 #define EVP_PKEY_get1_RSA EVP_PKEY_get1_RSA_ptr
 #define GENERAL_NAME_get0_value GENERAL_NAME_get0_value_ptr
+#define OCSP_BASICRESP_free OCSP_BASICRESP_free_ptr
+#define OCSP_CERTID_free OCSP_CERTID_free_ptr
+#define OCSP_REQUEST_free OCSP_REQUEST_free_ptr
+#define OCSP_REQUEST_new OCSP_REQUEST_new_ptr
+#define OCSP_RESPONSE_free OCSP_RESPONSE_free_ptr
+#define OCSP_cert_to_id OCSP_cert_to_id_ptr
+#define OCSP_check_validity OCSP_check_validity_ptr
+#define OCSP_request_add0_id OCSP_request_add0_id_ptr
+#define OCSP_request_add1_nonce OCSP_request_add1_nonce_ptr
+#define OCSP_resp_find_status OCSP_resp_find_status_ptr
+#define OCSP_response_get1_basic OCSP_response_get1_basic_ptr
+#define OCSP_response_status OCSP_response_status_ptr
+#define OCSP_sendreq_bio OCSP_sendreq_bio_ptr
 #define PEM_read_bio_PrivateKey PEM_read_bio_PrivateKey_ptr
 #define PEM_read_bio_X509 PEM_read_bio_X509_ptr
 #define PEM_read_bio_X509_AUX PEM_read_bio_X509_AUX_ptr
@@ -287,6 +315,7 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define X509_STORE_set_verify_cb X509_STORE_set_verify_cb_ptr
 #define X509_STORE_CTX_get_error X509_STORE_CTX_get_error_ptr
 #define SSL_get0_param SSL_get0_param_ptr
+#define d2i_OCSP_RESPONSE d2i_OCSP_RESPONSE_ptr
 
 #if USE_OPENSSL_3_0_X
 // OpenSSL 3.0 compatibility macros deal with some changes but we need to

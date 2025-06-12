@@ -1162,36 +1162,29 @@ static char* get_ocsp_url(X509 *cert)
         return NULL;
     }
 
-    STACK_OF(ACCESS_DESCRIPTION) *info;
-    info = X509_get_ext_d2i(cert, NID_info_access, NULL, NULL);
-    if (!info) {
+    STACK_OF(OPENSSL_STRING) *ocsp_urls = X509_get1_ocsp(cert);
+    if (!ocsp_urls) {
+        LogError("No OCSP URL found in certificate");
         return NULL;
     }
     
     char *url = NULL;
-    for (int i = 0; i < sk_ACCESS_DESCRIPTION_num(info); i++) {
-        ACCESS_DESCRIPTION *ad = sk_ACCESS_DESCRIPTION_value(info, i);
-        if (OBJ_obj2nid(ad->method) == NID_ad_OCSP) {
-            if (ad->location->type == GEN_URI) {
-                ASN1_STRING *uri = ad->location->d.uniformResourceIdentifier;
-                url = malloc(ASN1_STRING_length(uri) + 1);
-                if (url) {
-                    memcpy(url, ASN1_STRING_get0_data(uri), ASN1_STRING_length(uri));
-                    url[ASN1_STRING_length(uri)] = '\0';
-                }
-                break;
+    if (sk_OPENSSL_STRING_num(ocsp_urls) > 0) {
+        char *first_url = sk_OPENSSL_STRING_value(ocsp_urls, 0);
+        if (first_url) {
+            url = strdup(first_url);  // or malloc + strcpy if strdup unavailable
+            if (url) {
+                LogInfo("OCSP URL found: %s", url);
             }
         }
     }
     
-    sk_ACCESS_DESCRIPTION_pop_free(info, ACCESS_DESCRIPTION_free);
+    X509_email_free(ocsp_urls);  // This frees the STACK_OF(OPENSSL_STRING)
+    
     if (!url) {
         LogError("No OCSP URL found in certificate");
-        return NULL;
     }
-    else {
-        LogInfo("OCSP URL found: %s", url);
-    }
+    
     return url;
 }
 
