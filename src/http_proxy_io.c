@@ -282,7 +282,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
             default:
             case IO_OPEN_ERROR:
                 /* Codes_SRS_HTTP_PROXY_IO_01_078: [ When `on_underlying_io_open_complete` is called with `IO_OPEN_ERROR`, the `on_open_complete` callback shall be triggered with `IO_OPEN_ERROR`, passing also the `on_open_complete_context` argument as `context`. ]*/
-                LogError("Underlying IO open failed");
+                LogError("Underlying IO open failed for proxy connection to %s:%d (code=%d)", http_proxy_io_instance->proxy_hostname, http_proxy_io_instance->proxy_port, open_result_detailed.code);
                 indicate_open_complete_error_and_close(http_proxy_io_instance, open_result_detailed);
                 break;
 
@@ -429,6 +429,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
                             }
                             else
                             {
+                                LogInfo("Sending HTTP proxy CONNECT request for %s:%d", http_proxy_io_instance->hostname, http_proxy_io_instance->port);
                                 /* Codes_SRS_HTTP_PROXY_IO_01_063: [ The request shall be sent by calling `xio_send` and passing NULL as `on_send_complete` callback. ]*/
                                 if (xio_send(http_proxy_io_instance->underlying_io, connect_request, connect_request_length, unchecked_on_send_complete, NULL) != 0)
                                 {
@@ -469,6 +470,7 @@ static void on_underlying_io_error(void* context)
     else
     {
         HTTP_PROXY_IO_INSTANCE* http_proxy_io_instance = (HTTP_PROXY_IO_INSTANCE*)context;
+        LogError("Underlying IO error in http_proxy_io (state=%d)", http_proxy_io_instance->http_proxy_io_state);
 
         switch (http_proxy_io_instance->http_proxy_io_state)
         {
@@ -696,27 +698,32 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                     }
                     /* Codes_SRS_HTTP_PROXY_IO_01_069: [ Any successful (2xx) response to a CONNECT request indicates that the proxy has established a connection to the requested host and port, and has switched to tunneling the current connection to that server connection. ]*/
                     /* Codes_SRS_HTTP_PROXY_IO_01_090: [ Any successful (2xx) response to a CONNECT request indicates that the proxy has established a connection to the requested host and port, and has switched to tunneling the current connection to that server connection. ]*/
-                    else if ((status_code < 200) || (status_code > 299))
-                    {
-                        /* Codes_SRS_HTTP_PROXY_IO_01_071: [ If the status code is not successful, the `on_open_complete` callback shall be triggered with `IO_OPEN_ERROR`, passing also the `on_open_complete_context` argument as `context`. ]*/
-                        LogError("Bad status (%d) received in CONNECT response", status_code);
-                        open_result_detailed.code = __FAILURE__;
-                        indicate_open_complete_error_and_close(http_proxy_io_instance, open_result_detailed);
-                    }
                     else
                     {
-                        size_t length_remaining = http_proxy_io_instance->receive_buffer + http_proxy_io_instance->receive_buffer_size - ((const unsigned char *)request_end_ptr + 4);
-                        IO_OPEN_RESULT_DETAILED ok_result = { IO_OPEN_OK, 0 };
-
-                        /* Codes_SRS_HTTP_PROXY_IO_01_073: [ Once a success status code was parsed, the IO shall be OPEN. ]*/
-                        http_proxy_io_instance->http_proxy_io_state = HTTP_PROXY_IO_STATE_OPEN;
-                        /* Codes_SRS_HTTP_PROXY_IO_01_070: [ When a success status code is parsed, the `on_open_complete` callback shall be triggered with `IO_OPEN_OK`, passing also the `on_open_complete_context` argument as `context`. ]*/
-                        http_proxy_io_instance->on_io_open_complete(http_proxy_io_instance->on_io_open_complete_context, ok_result);
-
-                        if (length_remaining > 0)
+                        LogInfo("Received HTTP proxy CONNECT response with status code %d for %s:%d", status_code, http_proxy_io_instance->hostname, http_proxy_io_instance->port);
+                        if ((status_code < 200) || (status_code > 299))
                         {
-                            /* Codes_SRS_HTTP_PROXY_IO_01_072: [ Any bytes that are extra (not consumed by the CONNECT response), shall be indicated as received by calling the `on_bytes_received` callback and passing the `on_bytes_received_context` as context argument. ]*/
-                            http_proxy_io_instance->on_bytes_received(http_proxy_io_instance->on_bytes_received_context, (const unsigned char*)request_end_ptr + 4, length_remaining);
+                            /* Codes_SRS_HTTP_PROXY_IO_01_071: [ If the status code is not successful, the `on_open_complete` callback shall be triggered with `IO_OPEN_ERROR`, passing also the `on_open_complete_context` argument as `context`. ]*/
+                            LogError("Bad status (%d) received in CONNECT response for %s:%d", status_code, http_proxy_io_instance->hostname, http_proxy_io_instance->port);
+                            open_result_detailed.code = __FAILURE__;
+                            indicate_open_complete_error_and_close(http_proxy_io_instance, open_result_detailed);
+                        }
+                        else
+                        {
+                            size_t length_remaining = http_proxy_io_instance->receive_buffer + http_proxy_io_instance->receive_buffer_size - ((const unsigned char *)request_end_ptr + 4);
+                            IO_OPEN_RESULT_DETAILED ok_result = { IO_OPEN_OK, 0 };
+
+                            LogInfo("HTTP proxy connection established to %s:%d", http_proxy_io_instance->hostname, http_proxy_io_instance->port);
+                            /* Codes_SRS_HTTP_PROXY_IO_01_073: [ Once a success status code was parsed, the IO shall be OPEN. ]*/
+                            http_proxy_io_instance->http_proxy_io_state = HTTP_PROXY_IO_STATE_OPEN;
+                            /* Codes_SRS_HTTP_PROXY_IO_01_070: [ When a success status code is parsed, the `on_open_complete` callback shall be triggered with `IO_OPEN_OK`, passing also the `on_open_complete_context` argument as `context`. ]*/
+                            http_proxy_io_instance->on_io_open_complete(http_proxy_io_instance->on_io_open_complete_context, ok_result);
+
+                            if (length_remaining > 0)
+                            {
+                                /* Codes_SRS_HTTP_PROXY_IO_01_072: [ Any bytes that are extra (not consumed by the CONNECT response), shall be indicated as received by calling the `on_bytes_received` callback and passing the `on_bytes_received_context` as context argument. ]*/
+                                http_proxy_io_instance->on_bytes_received(http_proxy_io_instance->on_bytes_received_context, (const unsigned char*)request_end_ptr + 4, length_remaining);
+                            }
                         }
                     }
                 }

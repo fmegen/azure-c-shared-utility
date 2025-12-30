@@ -278,11 +278,12 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
         }
         else
         {
+            LogInfo("Resolving hostname %s:%d", socket_io_instance->hostname, socket_io_instance->port);
             socket_io_instance->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
             if (socket_io_instance->socket == INVALID_SOCKET)
             {
                 open_result_detailed.code = WSAGetLastError();
-                LogError("Failure: socket create failure %d.", open_result_detailed.code);
+                LogError("Failure: socket create failure %d for %s.", open_result_detailed.code, socket_io_instance->hostname);
                 result = __FAILURE__;
             }
             else
@@ -295,10 +296,12 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
                 addrHint.ai_socktype = SOCK_STREAM;
                 addrHint.ai_protocol = 0;
                 sprintf(portString, "%d", socket_io_instance->port);
-                if (getaddrinfo(socket_io_instance->hostname, portString, &addrHint, &addrInfo) != 0)
+                LogInfo("Starting DNS lookup for %s", socket_io_instance->hostname);
+                int addrResult = getaddrinfo(socket_io_instance->hostname, portString, &addrHint, &addrInfo);
+                if (addrResult != 0)
                 {
-                    open_result_detailed.code = WSAGetLastError();
-                    LogError("Failure: getaddrinfo failure %d.", open_result_detailed.code);
+                    open_result_detailed.code = addrResult;
+                    LogError("Failure: getaddrinfo failure %d for host %s.", open_result_detailed.code, socket_io_instance->hostname);
                     (void)closesocket(socket_io_instance->socket);
                     socket_io_instance->socket = INVALID_SOCKET;
                     result = __FAILURE__;
@@ -307,10 +310,11 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
                 {
                     u_long iMode = 1;
 
+                    LogInfo("DNS resolved successfully, connecting to %s:%d", socket_io_instance->hostname, socket_io_instance->port);
                     if (connect(socket_io_instance->socket, addrInfo->ai_addr, (int)addrInfo->ai_addrlen) != 0)
                     {
                         open_result_detailed.code = WSAGetLastError();
-                        LogError("Failure: connect failure %d.", open_result_detailed.code);
+                        LogError("Failure: connect to %s:%d failed with error %d.", socket_io_instance->hostname, socket_io_instance->port, open_result_detailed.code);
                         (void)closesocket(socket_io_instance->socket);
                         socket_io_instance->socket = INVALID_SOCKET;
                         result = __FAILURE__;
@@ -318,13 +322,14 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
                     else if (ioctlsocket(socket_io_instance->socket, FIONBIO, &iMode) != 0)
                     {
                         open_result_detailed.code = WSAGetLastError();
-                        LogError("Failure: ioctlsocket failure %d.", open_result_detailed.code);
+                        LogError("Failure: ioctlsocket failure %d for %s:%d.", open_result_detailed.code, socket_io_instance->hostname, socket_io_instance->port);
                         (void)closesocket(socket_io_instance->socket);
                         socket_io_instance->socket = INVALID_SOCKET;
                         result = __FAILURE__;
                     }
                     else
                     {
+                        LogInfo("TCP connection to %s:%d established successfully.", socket_io_instance->hostname, socket_io_instance->port);
                         socket_io_instance->on_bytes_received = on_bytes_received;
                         socket_io_instance->on_bytes_received_context = on_bytes_received_context;
 

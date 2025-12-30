@@ -757,6 +757,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
             {
             default:
             case IO_OPEN_ERROR:
+                LogError("Underlying IO open failed (code=%d)", io_open_result_detailed.code);
                 /* Codes_SRS_UWS_CLIENT_01_369: [ When `on_underlying_io_open_complete` is called with `IO_OPEN_ERROR` while uws is OPENING (`uws_client_open_async` was called), uws shall report that the open failed by calling the `on_ws_open_complete` callback passed to `uws_client_open_async` with `WS_OPEN_ERROR_UNDERLYING_IO_OPEN_FAILED`. ]*/
                 ws_open_result.result = WS_OPEN_ERROR_UNDERLYING_IO_OPEN_FAILED;
                 ws_open_result.code = io_open_result_detailed.code;
@@ -764,6 +765,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
                 break;
 
             case IO_OPEN_CANCELLED:
+                LogError("Underlying IO open cancelled (code=%d)", io_open_result_detailed.code);
                 /* Codes_SRS_UWS_CLIENT_01_402: [ When `on_underlying_io_open_complete` is called with `IO_OPEN_CANCELLED` while uws is OPENING (`uws_client_open_async` was called), uws shall report that the open failed by calling the `on_ws_open_complete` callback passed to `uws_client_open_async` with `WS_OPEN_ERROR_UNDERLYING_IO_OPEN_CANCELLED`. ]*/
                 ws_open_result.result = WS_OPEN_ERROR_UNDERLYING_IO_OPEN_CANCELLED;
                 ws_open_result.code = io_open_result_detailed.code;
@@ -778,6 +780,8 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
                 unsigned char nonce[16];
                 STRING_HANDLE base64_nonce;
                 char* request_headers = NULL;
+
+                LogInfo("Underlying IO opened successfully for %s:%d, preparing WebSocket upgrade", uws_client->hostname, uws_client->port);
 
                 /* Codes_SRS_UWS_CLIENT_01_089: [ The value of this header field MUST be a nonce consisting of a randomly selected 16-byte value that has been base64-encoded (see Section 4 of [RFC4648]). ]*/
                 /* Codes_SRS_UWS_CLIENT_01_090: [ The nonce MUST be selected randomly for each connection. ]*/
@@ -888,6 +892,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
                             /* No need to have any send complete here, as we are monitoring the received bytes */
                             /* Codes_SRS_UWS_CLIENT_01_372: [ Once prepared the WebSocket upgrade request shall be sent by calling `xio_send`. ]*/
                             /* Codes_SRS_UWS_CLIENT_01_080: [ Once a connection to the server has been established (including a connection via a proxy or over a TLS-encrypted tunnel), the client MUST send an opening handshake to the server. ]*/
+                            LogInfo("Sending WebSocket upgrade request to %s:%d%s", uws_client->hostname, uws_client->port, uws_client->resource_name);
                             if (xio_send(uws_client->underlying_io, upgrade_request, upgrade_request_length, unchecked_on_send_complete, NULL) != 0)
                             {
                                 /* Codes_SRS_UWS_CLIENT_01_373: [ If `xio_send` fails then uws shall report that the open failed by calling the `on_ws_open_complete` callback passed to `uws_client_open_async` with `WS_OPEN_ERROR_CANNOT_SEND_UPGRADE_REQUEST`. ]*/
@@ -1151,6 +1156,10 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                 }
                 else
                 {
+                    if (uws_client->stream_buffer_count == 0)
+                    {
+                        LogInfo("Received %zu bytes while waiting for WebSocket upgrade response", size);
+                    }
                     uws_client->stream_buffer = new_received_bytes;
                     (void)memcpy(uws_client->stream_buffer + uws_client->stream_buffer_count, buffer, size);
                     uws_client->stream_buffer_count += size;
@@ -1219,6 +1228,8 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                         ((request_end_ptr = strstr((const char*)uws_client->stream_buffer, "\r\n\r\n")) != NULL))
                     {
                         int status_code;
+                        size_t response_length = request_end_ptr - (const char*)uws_client->stream_buffer + 4;
+                        LogInfo("Received complete WebSocket upgrade response (%zu bytes)", response_length);
 
                         /* This part should really be done with the HTTPAPI, but that has to be done as a separate step
                         as the HTTPAPI has to expose somehow the underlying IO and currently this would be a too big of a change. */
@@ -1233,32 +1244,37 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                             ws_open_result_detailed.code = __FAILURE__;
                             indicate_ws_open_complete_error_and_close(uws_client, ws_open_result_detailed);
                         }
-                        else if (status_code != 101)
-                        {
-                            /* Codes_SRS_UWS_CLIENT_01_382: [ If a negative status is decoded from the WebSocket upgrade request, an error shall be indicated by calling the `on_ws_open_complete` callback passed to `uws_client_open_async` with `WS_OPEN_ERROR_BAD_RESPONSE_STATUS`. ]*/
-                            LogError("Bad status (%d) received in WebSocket Upgrade response", status_code);
-                            ws_open_result_detailed.result = WS_OPEN_ERROR_BAD_RESPONSE_STATUS;
-                            ws_open_result_detailed.code = status_code;
-
-                            // Include the original http message so the client can determine if it cares to garner data.
-                            // Like for a redirect.
-                            ws_open_result_detailed.buffer = uws_client->stream_buffer;
-                            ws_open_result_detailed.buffSize = uws_client->stream_buffer_count;
-                            indicate_ws_open_complete_error_and_close(uws_client, ws_open_result_detailed);
-                        }
                         else
                         {
-                            /* Codes_SRS_UWS_CLIENT_01_384: [ Any extra bytes that are left unconsumed after decoding a succesfull WebSocket upgrade response shall be used for decoding WebSocket frames ]*/
-                            consume_stream_buffer_bytes(uws_client, request_end_ptr - (char*)uws_client->stream_buffer + 4);
+                            LogInfo("Received WebSocket upgrade response with status code %d", status_code);
+                            if (status_code != 101)
+                            {
+                                /* Codes_SRS_UWS_CLIENT_01_382: [ If a negative status is decoded from the WebSocket upgrade request, an error shall be indicated by calling the `on_ws_open_complete` callback passed to `uws_client_open_async` with `WS_OPEN_ERROR_BAD_RESPONSE_STATUS`. ]*/
+                                LogError("Bad status (%d) received in WebSocket Upgrade response", status_code);
+                                ws_open_result_detailed.result = WS_OPEN_ERROR_BAD_RESPONSE_STATUS;
+                                ws_open_result_detailed.code = status_code;
 
-                            /* Codes_SRS_UWS_CLIENT_01_381: [ If the status is 101, uws shall be considered OPEN and this shall be indicated by calling the `on_ws_open_complete` callback passed to `uws_client_open_async` with `IO_OPEN_OK`. ]*/
-                            uws_client->uws_state = UWS_STATE_OPEN;
+                                // Include the original http message so the client can determine if it cares to garner data.
+                                // Like for a redirect.
+                                ws_open_result_detailed.buffer = uws_client->stream_buffer;
+                                ws_open_result_detailed.buffSize = uws_client->stream_buffer_count;
+                                indicate_ws_open_complete_error_and_close(uws_client, ws_open_result_detailed);
+                            }
+                            else
+                            {
+                                LogInfo("WebSocket upgrade successful - connection established to %s:%d%s", uws_client->hostname, uws_client->port, uws_client->resource_name);
+                                /* Codes_SRS_UWS_CLIENT_01_384: [ Any extra bytes that are left unconsumed after decoding a succesfull WebSocket upgrade response shall be used for decoding WebSocket frames ]*/
+                                consume_stream_buffer_bytes(uws_client, request_end_ptr - (char*)uws_client->stream_buffer + 4);
 
-                            /* Codes_SRS_UWS_CLIENT_01_065: [ When the client is to _Establish a WebSocket Connection_ given a set of (/host/, /port/, /resource name/, and /secure/ flag), along with a list of /protocols/ and /extensions/ to be used, and an /origin/ in the case of web browsers, it MUST open a connection, send an opening handshake, and read the server's handshake in response. ]*/
-                            /* Codes_SRS_UWS_CLIENT_01_115: [ If the server's response is validated as provided for above, it is said that _The WebSocket Connection is Established_ and that the WebSocket Connection is in the OPEN state. ]*/
-                            uws_client->on_ws_open_complete(uws_client->on_ws_open_complete_context, ws_open_result_detailed);
+                                /* Codes_SRS_UWS_CLIENT_01_381: [ If the status is 101, uws shall be considered OPEN and this shall be indicated by calling the `on_ws_open_complete` callback passed to `uws_client_open_async` with `IO_OPEN_OK`. ]*/
+                                uws_client->uws_state = UWS_STATE_OPEN;
 
-                            decode_stream = 1;
+                                /* Codes_SRS_UWS_CLIENT_01_065: [ When the client is to _Establish a WebSocket Connection_ given a set of (/host/, /port/, /resource name/, and /secure/ flag), along with a list of /protocols/ and /extensions/ to be used, and an /origin/ in the case of web browsers, it MUST open a connection, send an opening handshake, and read the server's handshake in response. ]*/
+                                /* Codes_SRS_UWS_CLIENT_01_115: [ If the server's response is validated as provided for above, it is said that _The WebSocket Connection is Established_ and that the WebSocket Connection is in the OPEN state. ]*/
+                                uws_client->on_ws_open_complete(uws_client->on_ws_open_complete_context, ws_open_result_detailed);
+
+                                decode_stream = 1;
+                            }
                         }
                     }
 
@@ -1694,6 +1710,14 @@ static void on_underlying_io_error(void* context)
 {
     UWS_CLIENT_HANDLE uws_client = (UWS_CLIENT_HANDLE)context;
 
+    if (uws_client == NULL)
+    {
+        LogError("Underlying IO error with NULL context");
+        return;
+    }
+
+    LogError("Underlying IO error in state %d", (int)uws_client->uws_state);
+
     switch (uws_client->uws_state)
     {
     default:
@@ -1774,7 +1798,8 @@ int uws_client_open_async(UWS_CLIENT_HANDLE uws_client, ON_WS_OPEN_COMPLETE on_w
             /* Codes_SRS_UWS_CLIENT_01_025: [ `uws_client_open_async` shall open the underlying IO by calling `xio_open` and providing the IO handle created in `uws_client_create` as argument. ]*/
             /* Codes_SRS_UWS_CLIENT_01_367: [ The callbacks `on_underlying_io_open_complete`, `on_underlying_io_bytes_received` and `on_underlying_io_error` shall be passed as arguments to `xio_open`. ]*/
             /* Codes_SRS_UWS_CLIENT_01_061: [ To _Establish a WebSocket Connection_, a client opens a connection and sends a handshake as defined in this section. ]*/
-            if (xio_open(uws_client->underlying_io, on_underlying_io_open_complete, uws_client, on_underlying_io_bytes_received, uws_client, on_underlying_io_error, uws_client) != 0) // TODO here
+            LogInfo("Opening underlying IO for WebSocket connection to %s:%d", uws_client->hostname, uws_client->port);
+            if (xio_open(uws_client->underlying_io, on_underlying_io_open_complete, uws_client, on_underlying_io_bytes_received, uws_client, on_underlying_io_error, uws_client) != 0)
             {
                 /* Codes_SRS_UWS_CLIENT_01_028: [ If opening the underlying IO fails then `uws_client_open_async` shall fail and return a non-zero value. ]*/
                 /* Codes_SRS_UWS_CLIENT_01_075: [ If the connection could not be opened, either because a direct connection failed or because any proxy used returned an error, then the client MUST _Fail the WebSocket Connection_ and abort the connection attempt. ]*/
@@ -1863,7 +1888,7 @@ int uws_client_close_async(UWS_CLIENT_HANDLE uws_client, ON_WS_CLOSE_COMPLETE on
             else
             {
                 /* Codes_SRS_UWS_CLIENT_01_396: [ On success `uws_client_close_async` shall return 0. ]*/
-                LogInfo("%s: closed underlying io.", __FUNCTION__);
+                LogInfo("Closing underlying IO for WebSocket connection to %s:%d", uws_client->hostname, uws_client->port);
                 result = 0;
             }
         }
