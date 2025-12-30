@@ -379,10 +379,11 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
 {
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
     IO_OPEN_RESULT io_open_result = io_open_result_detailed.result;
+    const char* hostname = (tls_io_instance && tls_io_instance->hostname) ? tls_io_instance->hostname : "<unknown>";
 
     if (tls_io_instance->tlsio_state != TLSIO_STATE_OPENING_UNDERLYING_IO)
     {
-        LogError("Unexpected underlying IO open complete in state %d for tls_io=%p", tls_io_instance->tlsio_state, tls_io_instance);
+        LogError("Unexpected underlying IO open complete in state %d for %s", tls_io_instance->tlsio_state, hostname);
         tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
         indicate_error(tls_io_instance);
     }
@@ -390,7 +391,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
     {
         if (io_open_result != IO_OPEN_OK)
         {
-            LogError("Underlying IO open failed for tls_io=%p: result=%d, code=%d", tls_io_instance, io_open_result, io_open_result_detailed.code);
+            LogError("Underlying IO open failed for %s: result=%d, code=%d", hostname, io_open_result, io_open_result_detailed.code);
             tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
             if (tls_io_instance->on_io_open_complete != NULL)
             {
@@ -399,7 +400,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
         }
         else
         {
-            LogInfo("Underlying IO opened for tls_io=%p, sending TLS client hello", tls_io_instance);
+            LogInfo("Underlying IO opened for %s, sending TLS client hello", hostname);
             send_client_hello(tls_io_instance);
         }
     }
@@ -663,7 +664,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                     {
                         if (tls_io_instance->tlsio_state == TLSIO_STATE_HANDSHAKE_CLIENT_HELLO_SENT)
                         {
-                            LogInfo("TLS handshake completed successfully for tls_io=%p", tls_io_instance);
+                            LogInfo("TLS handshake completed successfully with %s", tls_io_instance->hostname ? tls_io_instance->hostname : "<unknown>");
                             tls_io_instance->tlsio_state = TLSIO_STATE_OPEN;
 
                             if (tls_io_instance->on_io_open_complete != NULL)
@@ -675,7 +676,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                         else
                         {
                             LIST_ITEM_HANDLE first_pending_io;
-                            LogInfo("TLS handshake completed (renegotiation) for tls_io=%p", tls_io_instance);
+                            LogInfo("TLS handshake completed (renegotiation) with %s", tls_io_instance->hostname ? tls_io_instance->hostname : "<unknown>");
                             tls_io_instance->tlsio_state = TLSIO_STATE_OPEN;
 
                             first_pending_io = singlylinkedlist_get_head_item(tls_io_instance->pending_io_list);
@@ -1193,10 +1194,10 @@ int tlsio_schannel_open(CONCRETE_IO_HANDLE tls_io, ON_IO_OPEN_COMPLETE on_io_ope
 
             tls_io_instance->tlsio_state = TLSIO_STATE_OPENING_UNDERLYING_IO;
 
-            LogInfo("Opening underlying IO for TLS connection, tls_io=%p", tls_io_instance);
+            LogInfo("Opening underlying IO for TLS connection to %s", tls_io_instance->hostname ? tls_io_instance->hostname : "<unknown>");
             if (xio_open(tls_io_instance->socket_io, on_underlying_io_open_complete, tls_io_instance, on_underlying_io_bytes_received, tls_io_instance, on_underlying_io_error, tls_io_instance) != 0)
             {
-                LogError("xio_open failed for tls_io=%p", tls_io_instance);
+                LogError("xio_open failed for %s", tls_io_instance->hostname ? tls_io_instance->hostname : "<unknown>");
                 tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
                 result = __FAILURE__;
             }

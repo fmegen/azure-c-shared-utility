@@ -613,7 +613,6 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
             }
             else
             {
-                LogInfo("Resolving hostname %s:%d", socket_io_instance->hostname, socket_io_instance->port);
                 socket_io_instance->socket = socket(AF_INET, SOCK_STREAM, 0);
                 if (socket_io_instance->socket < SOCKET_SUCCESS)
                 {
@@ -639,7 +638,7 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
                     addrHint.ai_protocol = 0;
 
                     sprintf(portString, "%u", socket_io_instance->port);
-                    LogInfo("Starting DNS lookup for %s", socket_io_instance->hostname);
+                    LogInfo("Starting DNS lookup for %s:%d", socket_io_instance->hostname, socket_io_instance->port);
                     int err = getaddrinfo(socket_io_instance->hostname, portString, &addrHint, &addrInfo);
                     if (err != 0)
                     {
