@@ -379,11 +379,11 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
 {
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
     IO_OPEN_RESULT io_open_result = io_open_result_detailed.result;
-    const char* hostname = (tls_io_instance && tls_io_instance->hostname) ? tls_io_instance->hostname : "<unknown>";
+    const char* host_name_str = (tls_io_instance && tls_io_instance->host_name) ? (const char*)tls_io_instance->host_name : "<unknown>";
 
     if (tls_io_instance->tlsio_state != TLSIO_STATE_OPENING_UNDERLYING_IO)
     {
-        LogError("Unexpected underlying IO open complete in state %d for %s", tls_io_instance->tlsio_state, hostname);
+        LogError("Unexpected underlying IO open complete in state %d for %s", tls_io_instance->tlsio_state, host_name_str);
         tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
         indicate_error(tls_io_instance);
     }
@@ -391,7 +391,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
     {
         if (io_open_result != IO_OPEN_OK)
         {
-            LogError("Underlying IO open failed for %s: result=%d, code=%d", hostname, io_open_result, io_open_result_detailed.code);
+            LogError("Underlying IO open failed for %s: result=%d, code=%d", host_name_str, io_open_result, io_open_result_detailed.code);
             tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
             if (tls_io_instance->on_io_open_complete != NULL)
             {
@@ -400,7 +400,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
         }
         else
         {
-            LogInfo("Underlying IO opened for %s, sending TLS client hello", hostname);
+            LogInfo("Underlying IO opened for %s, sending TLS client hello", host_name_str);
             send_client_hello(tls_io_instance);
         }
     }
@@ -664,7 +664,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                     {
                         if (tls_io_instance->tlsio_state == TLSIO_STATE_HANDSHAKE_CLIENT_HELLO_SENT)
                         {
-                            LogInfo("TLS handshake completed successfully with %s", tls_io_instance->hostname ? tls_io_instance->hostname : "<unknown>");
+                            LogInfo("TLS handshake completed successfully with %s", tls_io_instance->host_name ? (const char*)tls_io_instance->host_name : "<unknown>");
                             tls_io_instance->tlsio_state = TLSIO_STATE_OPEN;
 
                             if (tls_io_instance->on_io_open_complete != NULL)
@@ -676,18 +676,21 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                         else
                         {
                             LIST_ITEM_HANDLE first_pending_io;
-                            LogInfo("TLS handshake completed (renegotiation) with %s", tls_io_instance->hostname ? tls_io_instance->hostname : "<unknown>");
+                            LogInfo("TLS handshake completed (renegotiation) with %s", tls_io_instance->host_name ? (const char*)tls_io_instance->host_name : "<unknown>");
                             tls_io_instance->tlsio_state = TLSIO_STATE_OPEN;
 
+                            /* Process all pending sends - cache next item before processing for O(n) instead of
+                               remove+get_head which is O(n²) */
                             first_pending_io = singlylinkedlist_get_head_item(tls_io_instance->pending_io_list);
                             while (first_pending_io != NULL)
                             {
                                 PENDING_SEND* pending_send = (PENDING_SEND*)singlylinkedlist_item_get_value(first_pending_io);
+                                LIST_ITEM_HANDLE next_pending_io = singlylinkedlist_get_next_item(first_pending_io);
+
                                 if (pending_send == NULL)
                                 {
                                     LogError("Failure: retrieving pending IO from list");
                                     indicate_error(tls_io_instance);
-                                    break;
                                 }
                                 else
                                 {
@@ -696,15 +699,13 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                                         LogError("send failed");
                                         indicate_error(tls_io_instance);
                                     }
-                                    else
-                                    {
-                                        if (singlylinkedlist_remove(tls_io_instance->pending_io_list, first_pending_io) != 0)
-                                        {
-                                            LogError("Failure: removing pending IO from list");
-                                            indicate_error(tls_io_instance);
-                                        }
-                                    }
+
+                                    free(pending_send->bytes);
+                                    free(pending_send);
                                 }
+
+                                (void)singlylinkedlist_remove(tls_io_instance->pending_io_list, first_pending_io);
+                                first_pending_io = next_pending_io;
                             }
                         }
                     }
@@ -1031,7 +1032,8 @@ CONCRETE_IO_HANDLE tlsio_schannel_create(void* io_create_parameters)
                 void* io_interface_parameters;
 
                 #ifdef WINCE
-                (void) mbstowcs(result->host_name, tls_io_config->hostname, strlen(tls_io_config->hostname));
+                /* Copy hostname including the null terminator */
+                (void)mbstowcs(result->host_name, tls_io_config->hostname, strlen(tls_io_config->hostname) + 1);
                 #else
                 (void)strcpy(result->host_name, tls_io_config->hostname);
                 #endif
@@ -1134,15 +1136,18 @@ void tlsio_schannel_destroy(CONCRETE_IO_HANDLE tls_io)
         xio_destroy(tls_io_instance->socket_io);
         free(tls_io_instance->host_name);
 
+        /* Iterate through list and free all pending sends - no need to remove items
+           since the list itself is destroyed immediately after. Use get_next for O(n) */
         first_pending_io = singlylinkedlist_get_head_item(tls_io_instance->pending_io_list);
         while (first_pending_io != NULL)
         {
             PENDING_SEND* pending_send = (PENDING_SEND*)singlylinkedlist_item_get_value(first_pending_io);
+            LIST_ITEM_HANDLE next_pending_io = singlylinkedlist_get_next_item(first_pending_io);
+
             if (pending_send == NULL)
             {
                 LogError("Failure: retrieving socket from list");
                 indicate_error(tls_io_instance);
-                break;
             }
             else
             {
@@ -1151,11 +1156,11 @@ void tlsio_schannel_destroy(CONCRETE_IO_HANDLE tls_io)
                     pending_send->on_send_complete(pending_send->on_send_complete_context, IO_SEND_CANCELLED);
                 }
 
-                if (singlylinkedlist_remove(tls_io_instance->pending_io_list, first_pending_io) != 0)
-                {
-                    LogError("Failure: removing pending IO from list");
-                }
+                free(pending_send->bytes);
+                free(pending_send);
             }
+
+            first_pending_io = next_pending_io;
         }
 
         singlylinkedlist_destroy(tls_io_instance->pending_io_list);
@@ -1194,10 +1199,10 @@ int tlsio_schannel_open(CONCRETE_IO_HANDLE tls_io, ON_IO_OPEN_COMPLETE on_io_ope
 
             tls_io_instance->tlsio_state = TLSIO_STATE_OPENING_UNDERLYING_IO;
 
-            LogInfo("Opening underlying IO for TLS connection to %s", tls_io_instance->hostname ? tls_io_instance->hostname : "<unknown>");
+            LogInfo("Opening underlying IO for TLS connection to %s", tls_io_instance->host_name ? (const char*)tls_io_instance->host_name : "<unknown>");
             if (xio_open(tls_io_instance->socket_io, on_underlying_io_open_complete, tls_io_instance, on_underlying_io_bytes_received, tls_io_instance, on_underlying_io_error, tls_io_instance) != 0)
             {
-                LogError("xio_open failed for %s", tls_io_instance->hostname ? tls_io_instance->hostname : "<unknown>");
+                LogError("xio_open failed for %s", tls_io_instance->host_name ? (const char*)tls_io_instance->host_name : "<unknown>");
                 tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
                 result = __FAILURE__;
             }
@@ -1270,6 +1275,7 @@ int tlsio_schannel_send(CONCRETE_IO_HANDLE tls_io, const void* buffer, size_t si
             if (new_pending_send->bytes == NULL)
             {
                 LogError("Cannot allocate memory for pending IO payload");
+                free(new_pending_send);
                 result = __FAILURE__;
             }
             else
@@ -1282,6 +1288,8 @@ int tlsio_schannel_send(CONCRETE_IO_HANDLE tls_io, const void* buffer, size_t si
                 if (singlylinkedlist_add(tls_io_instance->pending_io_list, new_pending_send) == NULL)
                 {
                     LogError("Cannot add pending IO to list");
+                    free(new_pending_send->bytes);
+                    free(new_pending_send);
                     result = __FAILURE__;
                 }
                 else
