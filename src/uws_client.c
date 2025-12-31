@@ -2148,7 +2148,7 @@ void uws_client_dowork(UWS_CLIENT_HANDLE uws_client)
             if (uws_client->uws_state == UWS_STATE_OPENING_UNDERLYING_IO || uws_client->uws_state == UWS_STATE_WAITING_FOR_UPGRADE_RESPONSE)
             {
                 time_t now = get_time(NULL);
-                if (uws_client->open_start_time != 0 && now != (time_t)-1)
+                if (uws_client->open_start_time != 0 && uws_client->open_start_time != (time_t)-1 && now != (time_t)-1 && now >= uws_client->open_start_time)
                 {
                     const time_t elapsed = now - uws_client->open_start_time;
                     if (elapsed >= 5 &&

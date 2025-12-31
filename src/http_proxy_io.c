@@ -933,7 +933,7 @@ static void http_proxy_io_dowork(CONCRETE_IO_HANDLE http_proxy_io)
             if (http_proxy_io_instance->http_proxy_io_state == HTTP_PROXY_IO_STATE_OPENING_UNDERLYING_IO || http_proxy_io_instance->http_proxy_io_state == HTTP_PROXY_IO_STATE_WAITING_FOR_CONNECT_RESPONSE)
             {
                 time_t now = get_time(NULL);
-                if (http_proxy_io_instance->open_start_time != 0 && now != (time_t)-1)
+                if (http_proxy_io_instance->open_start_time != 0 && http_proxy_io_instance->open_start_time != (time_t)-1 && now != (time_t)-1 && now >= http_proxy_io_instance->open_start_time)
                 {
                     const time_t elapsed = now - http_proxy_io_instance->open_start_time;
                     if (elapsed >= 5 &&
