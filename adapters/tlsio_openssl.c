@@ -2418,7 +2418,10 @@ int tlsio_openssl_open(CONCRETE_IO_HANDLE tls_io, ON_IO_OPEN_COMPLETE on_io_open
             }
             else
             {
-                LogInfo("Opening underlying IO for TLS connection to %s", tls_io_instance->hostname);
+                if (tls_io_instance->tlsio_state == TLSIO_STATE_OPENING_UNDERLYING_IO)
+                {
+                    LogInfo("Opening underlying IO for TLS connection to %s", tls_io_instance->hostname);
+                }
                 result = 0;
             }
         }

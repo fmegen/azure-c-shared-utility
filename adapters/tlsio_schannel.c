@@ -349,6 +349,8 @@ static void send_client_hello(TLS_IO_INSTANCE* tls_io_instance)
             }
             else
             {
+                const char* host_name_str = (tls_io_instance && tls_io_instance->host_name) ? (const char*)tls_io_instance->host_name : "<unknown>";
+                LogInfo("TLS client hello sent for %s (%lu bytes), waiting for server response", host_name_str, init_security_buffers[0].cbBuffer);
                 /* set the needed bytes to 1, to get on the next byte how many we actually need */
                 tls_io_instance->needed_bytes = 1;
                 if (resize_receive_buffer(tls_io_instance, tls_io_instance->needed_bytes + tls_io_instance->received_byte_count) != 0)

@@ -24,6 +24,7 @@
 #include "azure_c_shared_utility/base64.h"
 #include "azure_c_shared_utility/optionhandler.h"
 #include "azure_c_shared_utility/map.h"
+#include "azure_c_shared_utility/agenttime.h"
 
 static const char* UWS_CLIENT_OPTIONS = "uWSClientOptions";
 
@@ -100,6 +101,9 @@ typedef struct UWS_CLIENT_INSTANCE_TAG
     unsigned char* fragment_buffer;
     size_t fragment_buffer_count;
     unsigned char fragmented_frame_type;
+
+    time_t open_start_time;
+    time_t last_open_wait_log_time;
 } UWS_CLIENT_INSTANCE;
 
 void clear_pending_sends(UWS_CLIENT_INSTANCE* uws_client);
@@ -904,6 +908,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
                             {
                                 /* Codes_SRS_UWS_CLIENT_01_102: [ Once the client's opening handshake has been sent, the client MUST wait for a response from the server before sending any further data. ]*/
                                 uws_client->uws_state = UWS_STATE_WAITING_FOR_UPGRADE_RESPONSE;
+                                LogInfo("WebSocket upgrade request sent, waiting for response from %s:%d", uws_client->hostname, uws_client->port);
                             }
 
                             free(upgrade_request);
@@ -1782,6 +1787,9 @@ int uws_client_open_async(UWS_CLIENT_HANDLE uws_client, ON_WS_OPEN_COMPLETE on_w
         {
             uws_client->uws_state = UWS_STATE_OPENING_UNDERLYING_IO;
 
+            uws_client->open_start_time = get_time(NULL);
+            uws_client->last_open_wait_log_time = uws_client->open_start_time;
+
             uws_client->stream_buffer_count = 0;
             uws_client->fragment_buffer_count = 0;
             uws_client->fragmented_frame_type = WS_FRAME_TYPE_UNKNOWN;
@@ -2137,6 +2145,28 @@ void uws_client_dowork(UWS_CLIENT_HANDLE uws_client)
         /* Codes_SRS_UWS_CLIENT_01_060: [ If the IO is not yet open, `uws_client_dowork` shall do nothing. ]*/
         if (uws_client->uws_state != UWS_STATE_CLOSED)
         {
+            if (uws_client->uws_state == UWS_STATE_OPENING_UNDERLYING_IO || uws_client->uws_state == UWS_STATE_WAITING_FOR_UPGRADE_RESPONSE)
+            {
+                time_t now = get_time(NULL);
+                if (uws_client->open_start_time != 0 && now != (time_t)-1)
+                {
+                    const time_t elapsed = now - uws_client->open_start_time;
+                    if (elapsed >= 5 &&
+                        (uws_client->last_open_wait_log_time == 0 || (now - uws_client->last_open_wait_log_time) >= 5))
+                    {
+                        if (uws_client->uws_state == UWS_STATE_OPENING_UNDERLYING_IO)
+                        {
+                            LogInfo("Still opening underlying IO for WebSocket to %s:%d (elapsed=%ld seconds)", uws_client->hostname, uws_client->port, (long)elapsed);
+                        }
+                        else
+                        {
+                            LogInfo("Still waiting for WebSocket upgrade response from %s:%d (elapsed=%ld seconds, received=%zu bytes)", uws_client->hostname, uws_client->port, (long)elapsed, uws_client->stream_buffer_count);
+                        }
+                        uws_client->last_open_wait_log_time = now;
+                    }
+                }
+            }
+
             /* Codes_SRS_UWS_CLIENT_01_430: [ `uws_client_dowork` shall call `xio_dowork` with the IO handle argument set to the underlying IO created in `uws_client_create`. ]*/
             xio_dowork(uws_client->underlying_io);
         }

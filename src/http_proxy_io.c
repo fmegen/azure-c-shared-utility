@@ -13,6 +13,7 @@
 #include "azure_c_shared_utility/crt_abstractions.h"
 #include "azure_c_shared_utility/http_proxy_io.h"
 #include "azure_c_shared_utility/base64.h"
+#include "azure_c_shared_utility/agenttime.h"
 
 typedef enum HTTP_PROXY_IO_STATE_TAG
 {
@@ -44,6 +45,9 @@ typedef struct HTTP_PROXY_IO_INSTANCE_TAG
     XIO_HANDLE underlying_io;
     unsigned char* receive_buffer;
     size_t receive_buffer_size;
+
+    time_t open_start_time;
+    time_t last_open_wait_log_time;
 } HTTP_PROXY_IO_INSTANCE;
 
 static CONCRETE_IO_HANDLE http_proxy_io_create(void* io_create_parameters)
@@ -778,6 +782,11 @@ static int http_proxy_io_open(CONCRETE_IO_HANDLE http_proxy_io, ON_IO_OPEN_COMPL
 
             http_proxy_io_instance->http_proxy_io_state = HTTP_PROXY_IO_STATE_OPENING_UNDERLYING_IO;
 
+            http_proxy_io_instance->open_start_time = get_time(NULL);
+            http_proxy_io_instance->last_open_wait_log_time = http_proxy_io_instance->open_start_time;
+
+            LogInfo("Opening HTTP proxy tunnel via %s:%d to %s:%d", http_proxy_io_instance->proxy_hostname, http_proxy_io_instance->proxy_port, http_proxy_io_instance->hostname, http_proxy_io_instance->port);
+
             /* Codes_SRS_HTTP_PROXY_IO_01_019: [ `http_proxy_io_open` shall open the underlying IO by calling `xio_open` on the underlying IO handle created in `http_proxy_io_create`, while passing to it the callbacks `on_underlying_io_open_complete`, `on_underlying_io_bytes_received` and `on_underlying_io_error`. ]*/
             if (xio_open(http_proxy_io_instance->underlying_io, on_underlying_io_open_complete, http_proxy_io_instance, on_underlying_io_bytes_received, http_proxy_io_instance, on_underlying_io_error, http_proxy_io_instance) != 0)
             {
@@ -921,6 +930,34 @@ static void http_proxy_io_dowork(CONCRETE_IO_HANDLE http_proxy_io)
 
         if (http_proxy_io_instance->http_proxy_io_state != HTTP_PROXY_IO_STATE_CLOSED)
         {
+            if (http_proxy_io_instance->http_proxy_io_state == HTTP_PROXY_IO_STATE_OPENING_UNDERLYING_IO || http_proxy_io_instance->http_proxy_io_state == HTTP_PROXY_IO_STATE_WAITING_FOR_CONNECT_RESPONSE)
+            {
+                time_t now = get_time(NULL);
+                if (http_proxy_io_instance->open_start_time != 0 && now != (time_t)-1)
+                {
+                    const time_t elapsed = now - http_proxy_io_instance->open_start_time;
+                    if (elapsed >= 5 &&
+                        (http_proxy_io_instance->last_open_wait_log_time == 0 || (now - http_proxy_io_instance->last_open_wait_log_time) >= 5))
+                    {
+                        if (http_proxy_io_instance->http_proxy_io_state == HTTP_PROXY_IO_STATE_OPENING_UNDERLYING_IO)
+                        {
+                            LogInfo("Still opening underlying IO for HTTP proxy tunnel via %s:%d to %s:%d (elapsed=%ld seconds)",
+                                http_proxy_io_instance->proxy_hostname, http_proxy_io_instance->proxy_port,
+                                http_proxy_io_instance->hostname, http_proxy_io_instance->port,
+                                (long)elapsed);
+                        }
+                        else
+                        {
+                            LogInfo("Still waiting for HTTP proxy CONNECT response via %s:%d to %s:%d (elapsed=%ld seconds, received=%zu bytes)",
+                                http_proxy_io_instance->proxy_hostname, http_proxy_io_instance->proxy_port,
+                                http_proxy_io_instance->hostname, http_proxy_io_instance->port,
+                                (long)elapsed, http_proxy_io_instance->receive_buffer_size);
+                        }
+                        http_proxy_io_instance->last_open_wait_log_time = now;
+                    }
+                }
+            }
+
             /* Codes_SRS_HTTP_PROXY_IO_01_037: [ `http_proxy_io_dowork` shall call `xio_dowork` on the underlying IO created in `http_proxy_io_create`. ]*/
             xio_dowork(http_proxy_io_instance->underlying_io);
         }

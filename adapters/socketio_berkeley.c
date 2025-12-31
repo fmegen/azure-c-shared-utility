@@ -650,7 +650,23 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
                     }
                     else
                     {
-                        LogInfo("DNS resolved successfully, connecting to %s:%d (socket fd=%d)", socket_io_instance->hostname, socket_io_instance->port, socket_io_instance->socket);
+                        char resolved_ip[INET6_ADDRSTRLEN] = { 0 };
+                        const char* resolved_ip_str = NULL;
+
+                        if (addrInfo->ai_family == AF_INET && addrInfo->ai_addr != NULL)
+                        {
+                            struct sockaddr_in* sin = (struct sockaddr_in*)addrInfo->ai_addr;
+                            resolved_ip_str = inet_ntop(AF_INET, &sin->sin_addr, resolved_ip, sizeof(resolved_ip));
+                        }
+
+                        if (resolved_ip_str != NULL)
+                        {
+                            LogInfo("DNS resolved %s to %s, connecting to %s:%d (socket fd=%d)", socket_io_instance->hostname, resolved_ip_str, socket_io_instance->hostname, socket_io_instance->port, socket_io_instance->socket);
+                        }
+                        else
+                        {
+                            LogInfo("DNS resolved successfully, connecting to %s:%d (socket fd=%d)", socket_io_instance->hostname, socket_io_instance->port, socket_io_instance->socket);
+                        }
                         int flags;
                         if ((-1 == (flags = fcntl(socket_io_instance->socket, F_GETFL, 0))) ||
                             (fcntl(socket_io_instance->socket, F_SETFL, flags | O_NONBLOCK) == -1))
@@ -765,6 +781,11 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
     {
         open_result_detailed.result = result == 0 ? IO_OPEN_OK : IO_OPEN_ERROR;
         on_io_open_complete(on_io_open_complete_context, open_result_detailed);
+
+        /* The xio_open contract is callback-based. Returning a failure code from here
+           prevents upstream IO layers from surfacing open_result_detailed.code.
+           Always return success once the callback has been invoked. */
+        return 0;
     }
 
     return result;

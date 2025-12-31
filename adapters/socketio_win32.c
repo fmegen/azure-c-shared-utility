@@ -310,7 +310,24 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
                 {
                     u_long iMode = 1;
 
-                    LogInfo("DNS resolved successfully, connecting to %s:%d", hostname, socket_io_instance->port);
+                    {
+                        char resolved_ip[INET6_ADDRSTRLEN] = { 0 };
+                        const char* resolved_ip_str = NULL;
+                        if (addrInfo != NULL && addrInfo->ai_family == AF_INET && addrInfo->ai_addr != NULL)
+                        {
+                            struct sockaddr_in* sin = (struct sockaddr_in*)addrInfo->ai_addr;
+                            resolved_ip_str = InetNtopA(AF_INET, &sin->sin_addr, resolved_ip, sizeof(resolved_ip));
+                        }
+
+                        if (resolved_ip_str != NULL)
+                        {
+                            LogInfo("DNS resolved %s to %s, connecting to %s:%d", hostname, resolved_ip_str, hostname, socket_io_instance->port);
+                        }
+                        else
+                        {
+                            LogInfo("DNS resolved successfully, connecting to %s:%d", hostname, socket_io_instance->port);
+                        }
+                    }
                     if (connect(socket_io_instance->socket, addrInfo->ai_addr, (int)addrInfo->ai_addrlen) != 0)
                     {
                         open_result_detailed.code = WSAGetLastError();
@@ -349,11 +366,13 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
 
     if (on_io_open_complete != NULL)
     {
-        if (result != 0)
-        {
-            open_result_detailed.result = IO_OPEN_ERROR;
-        }
+        open_result_detailed.result = result == 0 ? IO_OPEN_OK : IO_OPEN_ERROR;
         on_io_open_complete(on_io_open_complete_context, open_result_detailed);
+
+        /* The xio_open contract is callback-based. Returning a failure code from here
+           prevents upstream IO layers from surfacing open_result_detailed.code.
+           Always return success once the callback has been invoked. */
+        return 0;
     }
 
     return result;
