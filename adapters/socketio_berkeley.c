@@ -666,7 +666,7 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
                             err = connect(socket_io_instance->socket, addrInfo->ai_addr, sizeof(*addrInfo->ai_addr));
                             if ((err != 0) && (errno != EINPROGRESS))
                             {
-                                LogError("Failure: connect failure %d (%s).", errno, strerror(errno));
+                                LogError("Failure: connect to %s:%d failed with error %d (%s).", socket_io_instance->hostname, socket_io_instance->port, errno, strerror(errno));
                                 open_result_detailed.code = errno;
                                 close(socket_io_instance->socket);
                                 socket_io_instance->socket = INVALID_SOCKET;
@@ -676,64 +676,68 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
                             {
                                 if (err != 0)
                                 {
-                                LogInfo("Connect in progress (EINPROGRESS), waiting up to %d seconds for %s:%d", CONNECT_TIMEOUT_SECONDS, socket_io_instance->hostname, socket_io_instance->port);
-                                struct pollfd fd = { 0 };
-                                fd.fd = socket_io_instance->socket;
-                                fd.events = POLLOUT;
+                                    LogInfo("Connect in progress (EINPROGRESS), waiting up to %d seconds for %s:%d", CONNECT_TIMEOUT_SECONDS, socket_io_instance->hostname, socket_io_instance->port);
+                                    struct pollfd fd = { 0 };
+                                    fd.fd = socket_io_instance->socket;
+                                    fd.events = POLLOUT;
 
-                                do
-                                {
-                                    retval = poll(&fd, 1, CONNECT_TIMEOUT_SECONDS * 1000);
-                                    if (retval < 0)
+                                    do
                                     {
-                                        poll_errno = errno;
-                                    }
-                                } while (retval < 0 && poll_errno == EINTR);
+                                        retval = poll(&fd, 1, CONNECT_TIMEOUT_SECONDS * 1000);
+                                        if (retval < 0)
+                                        {
+                                            poll_errno = errno;
+                                        }
+                                    } while (retval < 0 && poll_errno == EINTR);
 
-                                if (retval != 1)
-                                {
-                                    if (retval == 0) {
-                                        LogError("Failure: connection timed out after %d seconds waiting for %s:%d.", CONNECT_TIMEOUT_SECONDS, socket_io_instance->hostname, socket_io_instance->port);
-                                        open_result_detailed.code = SOCKETIO_POLL_TIMEOUT_ERROR;
-                                    } else {
-                                        LogError("Failure: poll failure, retval %d, errno %d (%s).", retval, poll_errno, strerror(poll_errno));
-                                        open_result_detailed.code = poll_errno;
-                                    }
-                                    close(socket_io_instance->socket);
-                                    socket_io_instance->socket = INVALID_SOCKET;
-                                    result = __FAILURE__;
-                                }
-                                else
-                                {
-                                    int so_error = 0;
-                                    socklen_t len = sizeof(so_error);
-                                    err = getsockopt(socket_io_instance->socket, SOL_SOCKET, SO_ERROR, &so_error, &len);
-                                    if (err != 0)
+                                    if (retval != 1)
                                     {
-                                        LogError("Failure: getsockopt failure %d (%s).", errno, strerror(errno));
-                                        open_result_detailed.code = errno;
-                                        close(socket_io_instance->socket);
-                                        socket_io_instance->socket = INVALID_SOCKET;
-                                        result = __FAILURE__;
-                                    }
-                                    else if (so_error != 0)
-                                    {
-                                        err = so_error;
-                                        LogError("Failure: connect to %s:%d failed with error %d (%s).", socket_io_instance->hostname, socket_io_instance->port, so_error, strerror(so_error));
-                                        open_result_detailed.code = so_error;
+                                        if (retval == 0)
+                                        {
+                                            LogError("Failure: connection timed out after %d seconds waiting for %s:%d.", CONNECT_TIMEOUT_SECONDS, socket_io_instance->hostname, socket_io_instance->port);
+                                            open_result_detailed.code = SOCKETIO_POLL_TIMEOUT_ERROR;
+                                        }
+                                        else
+                                        {
+                                            LogError("Failure: poll failure, retval %d, errno %d (%s).", retval, poll_errno, strerror(poll_errno));
+                                            open_result_detailed.code = poll_errno;
+                                        }
                                         close(socket_io_instance->socket);
                                         socket_io_instance->socket = INVALID_SOCKET;
                                         result = __FAILURE__;
                                     }
                                     else
                                     {
-                                        LogInfo("TCP connection to %s:%d established successfully (fd=%d).", socket_io_instance->hostname, socket_io_instance->port, socket_io_instance->socket);
-                                        result = 0;
+                                        int so_error = 0;
+                                        socklen_t len = sizeof(so_error);
+                                        err = getsockopt(socket_io_instance->socket, SOL_SOCKET, SO_ERROR, &so_error, &len);
+                                        if (err != 0)
+                                        {
+                                            LogError("Failure: getsockopt failure %d (%s).", errno, strerror(errno));
+                                            open_result_detailed.code = errno;
+                                            close(socket_io_instance->socket);
+                                            socket_io_instance->socket = INVALID_SOCKET;
+                                            result = __FAILURE__;
+                                        }
+                                        else if (so_error != 0)
+                                        {
+                                            err = so_error;
+                                            LogError("Failure: connect to %s:%d failed with error %d (%s).", socket_io_instance->hostname, socket_io_instance->port, so_error, strerror(so_error));
+                                            open_result_detailed.code = so_error;
+                                            close(socket_io_instance->socket);
+                                            socket_io_instance->socket = INVALID_SOCKET;
+                                            result = __FAILURE__;
+                                        }
+                                        else
+                                        {
+                                            LogInfo("TCP connection to %s:%d established successfully (fd=%d).", socket_io_instance->hostname, socket_io_instance->port, socket_io_instance->socket);
+                                            result = 0;
+                                        }
                                     }
-                                }
                             }
                             else
                             {
+                                LogInfo("TCP connection to %s:%d established successfully (fd=%d).", socket_io_instance->hostname, socket_io_instance->port, socket_io_instance->socket);
                                 result = 0;
                             }
 

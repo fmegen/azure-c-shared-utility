@@ -681,7 +681,6 @@ static void send_handshake_bytes(TLS_IO_INSTANCE* tls_io_instance)
     // SSL_get_error result
     ERR_clear_error();
     const char* hostname = tls_io_instance->hostname ? tls_io_instance->hostname : "<unknown>";
-    LogInfo("Starting TLS handshake with %s", hostname);
     hsret = SSL_do_handshake(tls_io_instance->ssl);
     if (hsret != SSL_DO_HANDSHAKE_SUCCESS)
     {
