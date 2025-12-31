@@ -936,29 +936,43 @@ static void http_proxy_io_dowork(CONCRETE_IO_HANDLE http_proxy_io)
                 if (http_proxy_io_instance->open_start_time != 0 && http_proxy_io_instance->open_start_time != (time_t)-1 && now != (time_t)-1 && now >= http_proxy_io_instance->open_start_time)
                 {
                     const time_t elapsed = now - http_proxy_io_instance->open_start_time;
-                    if (elapsed >= 5 &&
-                        (http_proxy_io_instance->last_open_wait_log_time == 0 || (now - http_proxy_io_instance->last_open_wait_log_time) >= 5))
+                    if (elapsed >= 1 &&
+                        (http_proxy_io_instance->last_open_wait_log_time == 0 || (now - http_proxy_io_instance->last_open_wait_log_time) >= 1))
                     {
                         if (http_proxy_io_instance->http_proxy_io_state == HTTP_PROXY_IO_STATE_OPENING_UNDERLYING_IO)
                         {
-                            LogInfo("Still opening underlying IO for HTTP proxy tunnel via %s:%d to %s:%d (elapsed=%ld seconds)",
-                                http_proxy_io_instance->proxy_hostname, http_proxy_io_instance->proxy_port,
-                                http_proxy_io_instance->hostname, http_proxy_io_instance->port,
-                                (long)elapsed);
+                            if (elapsed >= 5)
+                            {
+                                LogError("WARNING: Still opening underlying IO for HTTP proxy tunnel via %s:%d to %s:%d (elapsed=%ld seconds) - connection may be stuck",
+                                    http_proxy_io_instance->proxy_hostname, http_proxy_io_instance->proxy_port,
+                                    http_proxy_io_instance->hostname, http_proxy_io_instance->port,
+                                    (long)elapsed);
+                            }
+                            else
+                            {
+                                LogInfo("Still opening underlying IO for HTTP proxy tunnel via %s:%d to %s:%d (elapsed=%ld seconds)",
+                                    http_proxy_io_instance->proxy_hostname, http_proxy_io_instance->proxy_port,
+                                    http_proxy_io_instance->hostname, http_proxy_io_instance->port,
+                                    (long)elapsed);
+                            }
                         }
                         else
                         {
-                            LogInfo("Still waiting for HTTP proxy CONNECT response via %s:%d to %s:%d (elapsed=%ld seconds, received=%zu bytes)",
-                                http_proxy_io_instance->proxy_hostname, http_proxy_io_instance->proxy_port,
-                                http_proxy_io_instance->hostname, http_proxy_io_instance->port,
-                                (long)elapsed, http_proxy_io_instance->receive_buffer_size);
+                            if (elapsed >= 5)
+                            {
+                                LogError("WARNING: Still waiting for HTTP proxy CONNECT response via %s:%d to %s:%d (elapsed=%ld seconds, received=%zu bytes) - connection may be stuck",
+                                    http_proxy_io_instance->proxy_hostname, http_proxy_io_instance->proxy_port,
+                                    http_proxy_io_instance->hostname, http_proxy_io_instance->port,
+                                    (long)elapsed, http_proxy_io_instance->receive_buffer_size);
+                            }
+                            else
+                            {
+                                LogInfo("Still waiting for HTTP proxy CONNECT response via %s:%d to %s:%d (elapsed=%ld seconds, received=%zu bytes)",
+                                    http_proxy_io_instance->proxy_hostname, http_proxy_io_instance->proxy_port,
+                                    http_proxy_io_instance->hostname, http_proxy_io_instance->port,
+                                    (long)elapsed, http_proxy_io_instance->receive_buffer_size);
+                            }
                         }
-                        http_proxy_io_instance->last_open_wait_log_time = now;
-                    }
-                }
-            }
-
-            /* Codes_SRS_HTTP_PROXY_IO_01_037: [ `http_proxy_io_dowork` shall call `xio_dowork` on the underlying IO created in `http_proxy_io_create`. ]*/
             xio_dowork(http_proxy_io_instance->underlying_io);
         }
     }

@@ -2151,16 +2151,30 @@ void uws_client_dowork(UWS_CLIENT_HANDLE uws_client)
                 if (uws_client->open_start_time != 0 && uws_client->open_start_time != (time_t)-1 && now != (time_t)-1 && now >= uws_client->open_start_time)
                 {
                     const time_t elapsed = now - uws_client->open_start_time;
-                    if (elapsed >= 5 &&
-                        (uws_client->last_open_wait_log_time == 0 || (now - uws_client->last_open_wait_log_time) >= 5))
+                    if (elapsed >= 1 &&
+                        (uws_client->last_open_wait_log_time == 0 || (now - uws_client->last_open_wait_log_time) >= 1))
                     {
                         if (uws_client->uws_state == UWS_STATE_OPENING_UNDERLYING_IO)
                         {
-                            LogInfo("Still opening underlying IO for WebSocket to %s:%d (elapsed=%ld seconds)", uws_client->hostname, uws_client->port, (long)elapsed);
+                            if (elapsed >= 5)
+                            {
+                                LogError("WARNING: Still opening underlying IO for WebSocket to %s:%d (elapsed=%ld seconds) - connection may be stuck", uws_client->hostname, uws_client->port, (long)elapsed);
+                            }
+                            else
+                            {
+                                LogInfo("Still opening underlying IO for WebSocket to %s:%d (elapsed=%ld seconds)", uws_client->hostname, uws_client->port, (long)elapsed);
+                            }
                         }
                         else
                         {
-                            LogInfo("Still waiting for WebSocket upgrade response from %s:%d (elapsed=%ld seconds, received=%zu bytes)", uws_client->hostname, uws_client->port, (long)elapsed, uws_client->stream_buffer_count);
+                            if (elapsed >= 5)
+                            {
+                                LogError("WARNING: Still waiting for WebSocket upgrade response from %s:%d (elapsed=%ld seconds, received=%zu bytes) - connection may be stuck", uws_client->hostname, uws_client->port, (long)elapsed, uws_client->stream_buffer_count);
+                            }
+                            else
+                            {
+                                LogInfo("Still waiting for WebSocket upgrade response from %s:%d (elapsed=%ld seconds, received=%zu bytes)", uws_client->hostname, uws_client->port, (long)elapsed, uws_client->stream_buffer_count);
+                            }
                         }
                         uws_client->last_open_wait_log_time = now;
                     }
