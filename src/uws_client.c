@@ -1165,6 +1165,10 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                     {
                         LogInfo("Received %zu bytes while waiting for WebSocket upgrade response", size);
                     }
+                    else
+                    {
+                        LogInfo("Received %zu bytes while waiting for WebSocket upgrade response (total buffered %zu)", size, uws_client->stream_buffer_count + size);
+                    }
                     uws_client->stream_buffer = new_received_bytes;
                     (void)memcpy(uws_client->stream_buffer + uws_client->stream_buffer_count, buffer, size);
                     uws_client->stream_buffer_count += size;
@@ -1193,6 +1197,8 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                     uws_client->stream_buffer = new_received_bytes;
                     (void)memcpy(uws_client->stream_buffer + uws_client->stream_buffer_count, buffer, size);
                     uws_client->stream_buffer_count += size;
+
+                    LogInfo("Received %zu bytes of WebSocket data while OPEN (total buffered %zu)", size, uws_client->stream_buffer_count);
 
                     // One extra element was allocated. Initialize it.
                     uws_client->stream_buffer[uws_client->stream_buffer_count] = 0;
@@ -1269,6 +1275,10 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                             {
                                 LogInfo("WebSocket upgrade successful - connection established to %s:%d%s", uws_client->hostname, uws_client->port, uws_client->resource_name);
                                 /* Codes_SRS_UWS_CLIENT_01_384: [ Any extra bytes that are left unconsumed after decoding a succesfull WebSocket upgrade response shall be used for decoding WebSocket frames ]*/
+                                if (uws_client->stream_buffer_count > (size_t)(request_end_ptr - (char*)uws_client->stream_buffer + 4))
+                                {
+                                    LogInfo("Retaining %zu tunneled bytes received with upgrade response", uws_client->stream_buffer_count - (size_t)(request_end_ptr - (char*)uws_client->stream_buffer + 4));
+                                }
                                 consume_stream_buffer_bytes(uws_client, request_end_ptr - (char*)uws_client->stream_buffer + 4);
 
                                 /* Codes_SRS_UWS_CLIENT_01_381: [ If the status is 101, uws shall be considered OPEN and this shall be indicated by calling the `on_ws_open_complete` callback passed to `uws_client_open_async` with `IO_OPEN_OK`. ]*/

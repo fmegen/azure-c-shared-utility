@@ -433,6 +433,7 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
             LIST_ITEM_HANDLE first_pending_io = singlylinkedlist_get_head_item(socket_io_instance->pending_io_list);
             if (first_pending_io != NULL)
             {
+                LogInfo("Pending send in flight; queueing %zu bytes", size);
                 if (add_pending_io(socket_io_instance, (const unsigned char*)buffer, size, on_send_complete, callback_context) != 0)
                 {
                     LogError("Failure: add_pending_io failed.");
@@ -459,6 +460,7 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
                     else
                     {
                         /* queue data */
+                        LogInfo("Send would block; queueing %zu bytes", size);
                         if (add_pending_io(socket_io_instance, (const unsigned char*)buffer, size, on_send_complete, callback_context) != 0)
                         {
                             LogError("Failure: add_pending_io failed.");
@@ -466,6 +468,7 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
                         }
                         else
                         {
+                            LogInfo("Sent %d/%zu bytes immediately, queuing remaining %zu bytes", send_result < 0 ? 0 : send_result, size, size - (send_result < 0 ? 0 : (size_t)send_result));
                             result = 0;
                         }
                     }
@@ -520,6 +523,7 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
                     else
                     {
                         /* try again */
+                        LogInfo("Send would block while flushing %zu bytes; will retry", pending_socket_io->size);
                     }
                 }
                 else
@@ -549,6 +553,7 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
                     received = recv(socket_io_instance->socket, (char*)socket_io_instance->recv_bytes, RECEIVE_BYTES_VALUE, 0);
                     if ((received > 0))
                     {
+                        LogInfo("Received %d bytes on socket", received);
                         if (socket_io_instance->on_bytes_received != NULL)
                         {
                             /* Explicitly ignoring here the result of the callback */

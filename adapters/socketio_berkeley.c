@@ -848,6 +848,7 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
             LIST_ITEM_HANDLE first_pending_io = singlylinkedlist_get_head_item(socket_io_instance->pending_io_list);
             if (first_pending_io != NULL)
             {
+                LogInfo("Pending send in flight on fd=%d; queuing %zu bytes", socket_io_instance->socket, size);
                 if (add_pending_io(socket_io_instance, buffer, size, on_send_complete, callback_context) != 0)
                 {
                     LogError("Failure: add_pending_io failed.");
@@ -875,6 +876,7 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
                         if (send_result == INVALID_SOCKET && errno == EAGAIN) /*send says "come back later" with EAGAIN - likely the socket buffer cannot accept more data*/
                         {
                             // put the full message in the queue
+                            LogInfo("Send would block on fd=%d; queueing %zu bytes", socket_io_instance->socket, size);
                             send_result = 0;
                         }
 
@@ -886,6 +888,7 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
                         }
                         else
                         {
+                            LogInfo("Sent %zu bytes immediately on fd=%d, queuing remaining %zu bytes", (size_t)send_result, socket_io_instance->socket, size - send_result);
                             result = 0;
                         }
                     }
@@ -933,6 +936,7 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
                     if (errno == EAGAIN) /*send says "come back later" with EAGAIN - likely the socket buffer cannot accept more data*/
                     {
                         /*do nothing until next dowork */
+                        LogInfo("Send would block on fd=%d while flushing %zu bytes; will retry", socket_io_instance->socket, pending_socket_io->size);
                         break;
                     }
                     else
@@ -949,8 +953,10 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
                 else
                 {
                     /* simply wait until next dowork */
-                    (void)memmove(pending_socket_io->bytes, pending_socket_io->bytes + send_result, pending_socket_io->size - send_result);
-                    pending_socket_io->size -= send_result;
+                    size_t remaining = pending_socket_io->size - send_result;
+                    (void)memmove(pending_socket_io->bytes, pending_socket_io->bytes + send_result, remaining);
+                    pending_socket_io->size = remaining;
+                    LogInfo("Partial send on fd=%d flushed %zu bytes, %zu bytes remain queued", socket_io_instance->socket, (size_t)send_result, remaining);
                     break;
                 }
             }
@@ -982,6 +988,7 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
                 received = recv(socket_io_instance->socket, socket_io_instance->recv_bytes, RECEIVE_BYTES_VALUE, 0);
                 if (received > 0)
                 {
+                    LogInfo("Received %zd bytes on socket fd=%d", received, socket_io_instance->socket);
                     if (socket_io_instance->on_bytes_received != NULL)
                     {
                         /* Explicitly ignoring here the result of the callback */

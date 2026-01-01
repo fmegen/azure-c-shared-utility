@@ -433,7 +433,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
                             }
                             else
                             {
-                                LogInfo("Sending HTTP proxy CONNECT request for %s:%d", http_proxy_io_instance->hostname, http_proxy_io_instance->port);
+                                LogInfo("Sending HTTP proxy CONNECT request for %s:%d (%d bytes)", http_proxy_io_instance->hostname, http_proxy_io_instance->port, connect_request_length);
                                 /* Codes_SRS_HTTP_PROXY_IO_01_063: [ The request shall be sent by calling `xio_send` and passing NULL as `on_send_complete` callback. ]*/
                                 if (xio_send(http_proxy_io_instance->underlying_io, connect_request, connect_request_length, unchecked_on_send_complete, NULL) != 0)
                                 {
@@ -671,6 +671,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                 http_proxy_io_instance->receive_buffer = new_receive_buffer;
                 memcpy(http_proxy_io_instance->receive_buffer + http_proxy_io_instance->receive_buffer_size, buffer, size);
                 http_proxy_io_instance->receive_buffer_size += size;
+                LogInfo("Accumulated %zu bytes of CONNECT response (%zu total)", size, http_proxy_io_instance->receive_buffer_size);
             }
 
             if (http_proxy_io_instance->receive_buffer_size >= 4)
@@ -726,6 +727,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                             if (length_remaining > 0)
                             {
                                 /* Codes_SRS_HTTP_PROXY_IO_01_072: [ Any bytes that are extra (not consumed by the CONNECT response), shall be indicated as received by calling the `on_bytes_received` callback and passing the `on_bytes_received_context` as context argument. ]*/
+                                LogInfo("Forwarding %zu extra tunneled bytes received with CONNECT response", length_remaining);
                                 http_proxy_io_instance->on_bytes_received(http_proxy_io_instance->on_bytes_received_context, (const unsigned char*)request_end_ptr + 4, length_remaining);
                             }
                         }
@@ -973,6 +975,12 @@ static void http_proxy_io_dowork(CONCRETE_IO_HANDLE http_proxy_io)
                                     (long)elapsed, http_proxy_io_instance->receive_buffer_size);
                             }
                         }
+
+                        http_proxy_io_instance->last_open_wait_log_time = now;
+                    }
+                }
+            }
+
             xio_dowork(http_proxy_io_instance->underlying_io);
         }
     }

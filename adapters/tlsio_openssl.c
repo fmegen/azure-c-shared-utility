@@ -581,6 +581,9 @@ static int openssl_static_locks_install(void)
                     break;
                 }
             }
+                    tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
+                    IO_OPEN_RESULT_DETAILED error_result = { IO_OPEN_ERROR, __FAILURE__ };
+                    indicate_open_complete(tls_io_instance, error_result);
 
             if (i != CRYPTO_num_locks())
             {
@@ -811,8 +814,10 @@ static void on_underlying_io_error(void* context)
     case TLSIO_STATE_OPENING_UNDERLYING_IO:
     case TLSIO_STATE_IN_HANDSHAKE:
         tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
-        IO_OPEN_RESULT_DETAILED error_result = { IO_OPEN_ERROR, __FAILURE__ };
-        indicate_open_complete(tls_io_instance, error_result);
+        {
+            IO_OPEN_RESULT_DETAILED error_result = { IO_OPEN_ERROR, __FAILURE__ };
+            indicate_open_complete(tls_io_instance, error_result);
+        }
         break;
 
     case TLSIO_STATE_OPEN:
@@ -841,6 +846,7 @@ static int decode_ssl_received_bytes(TLS_IO_INSTANCE* tls_io_instance)
         rcv_bytes = SSL_read(tls_io_instance->ssl, buffer, sizeof(buffer));
         if (rcv_bytes > 0)
         {
+            LogInfo("Decrypted %d bytes of TLS application data", rcv_bytes);
             if (tls_io_instance->on_bytes_received == NULL)
             {
                 LogError("NULL on_bytes_received.");
@@ -868,10 +874,12 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
 {
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
 
+    LogInfo("Received %zu raw bytes from underlying IO (state=%d)", size, tls_io_instance->tlsio_state);
     int written = BIO_write(tls_io_instance->in_bio, buffer, (int)size);
     if (written != (int)size)
     {
-        tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
+            LogError("Error in BIO_write.");
+            tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
         indicate_error(tls_io_instance);
         log_ERR_get_error("Error in BIO_write.");
     }
@@ -2383,6 +2391,7 @@ int tlsio_openssl_open(CONCRETE_IO_HANDLE tls_io, ON_IO_OPEN_COMPLETE on_io_open
     else
     {
         TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
+        const char* hostname = (tls_io_instance->hostname != NULL) ? tls_io_instance->hostname : "<unknown>";
 
         if (tls_io_instance->tlsio_state != TLSIO_STATE_NOT_OPEN)
         {
@@ -2391,6 +2400,7 @@ int tlsio_openssl_open(CONCRETE_IO_HANDLE tls_io, ON_IO_OPEN_COMPLETE on_io_open
         }
         else
         {
+            LogInfo("Opening TLS IO to %s", hostname);
             tls_io_instance->on_io_open_complete = on_io_open_complete;
             tls_io_instance->on_io_open_complete_context = on_io_open_complete_context;
 
@@ -2523,6 +2533,7 @@ int tlsio_openssl_send(CONCRETE_IO_HANDLE tls_io, const void* buffer, size_t siz
                 return result;
             }
 
+            LogInfo("Sending %zu bytes over TLS to %s", size, (tls_io_instance->hostname != NULL) ? tls_io_instance->hostname : "<unknown>");
             res = SSL_write(tls_io_instance->ssl, buffer, (int)size);
             if (res != (int)size)
             {
@@ -2589,6 +2600,7 @@ void tlsio_openssl_dowork(CONCRETE_IO_HANDLE tls_io)
                 // can then gracefully shut things down here.
                 //
                 // Set the state to TLSIO_STATE_ERROR so close won't gripe about the state
+                LogInfo("Closing TLS IO after handshake failure for %s", (tls_io_instance->hostname != NULL) ? tls_io_instance->hostname : "<unknown>");
                 tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
                 tlsio_openssl_close(tls_io_instance, NULL, NULL);
                 IO_OPEN_RESULT_DETAILED error_result = { IO_OPEN_ERROR, __FAILURE__ };

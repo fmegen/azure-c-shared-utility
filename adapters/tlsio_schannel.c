@@ -696,10 +696,16 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                                 }
                                 else
                                 {
+                                    LogInfo("TLS pending send flush starting, %zu bytes", pending_send->length);
+
                                     if (internal_send(tls_io_instance, pending_send->bytes, pending_send->length, pending_send->on_send_complete, pending_send->on_send_complete_context) != 0)
                                     {
                                         LogError("send failed");
                                         indicate_error(tls_io_instance);
+                                    }
+                                    else
+                                    {
+                                        LogInfo("TLS pending send completed successfully, %zu bytes sent", pending_send->length);
                                     }
 
                                     free(pending_send->bytes);
@@ -717,6 +723,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                 case SEC_I_COMPLETE_AND_CONTINUE:
                     if ((output_buffers[0].cbBuffer > 0) && xio_send(tls_io_instance->socket_io, output_buffers[0].pvBuffer, output_buffers[0].cbBuffer, unchecked_on_send_complete, NULL) != 0)
                     {
+                        LogError("TLS handshake token send failed, %lu bytes", output_buffers[0].cbBuffer);
                         tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
                         if (tls_io_instance->on_io_open_complete != NULL)
                         {
@@ -740,6 +747,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
 
                         if (set_receive_buffer(tls_io_instance, tls_io_instance->needed_bytes + tls_io_instance->received_byte_count) != 0)
                         {
+                            LogError("TLS set_receive_buffer failed, need %zu bytes, have %zu", tls_io_instance->needed_bytes, tls_io_instance->received_byte_count);
                             tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
                             if (tls_io_instance->on_io_open_complete != NULL)
                             {
@@ -826,6 +834,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                 case SEC_E_OK:
                     if (security_buffers[1].BufferType != SECBUFFER_DATA)
                     {
+                        LogError("TLS expected application data, got buffer type %lu", security_buffers[1].BufferType);
                         tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
                         indicate_error(tls_io_instance);
                     }
@@ -836,6 +845,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                         /* notify of the received data */
                         if (tls_io_instance->on_bytes_received != NULL)
                         {
+                            LogInfo("TLS decrypted application data: %lu bytes", security_buffers[1].cbBuffer);
                             tls_io_instance->on_bytes_received(tls_io_instance->on_bytes_received_context, (const unsigned char *) security_buffers[1].pvBuffer, security_buffers[1].cbBuffer);
                         }
 
@@ -858,6 +868,7 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
 
                         if (set_receive_buffer(tls_io_instance, tls_io_instance->needed_bytes + tls_io_instance->received_byte_count) != 0)
                         {
+                            LogError("TLS set_receive_buffer failed in SEC_E_OK path, need %zu bytes, have %zu", tls_io_instance->needed_bytes, tls_io_instance->received_byte_count);
                             tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
                             indicate_error(tls_io_instance);
                         }
@@ -906,8 +917,11 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                         /* This needs to account for EXTRA */
                         tls_io_instance->received_byte_count = 0;
 
+                        LogInfo("TLS renegotiation: sending server token %lu bytes", output_buffers[0].cbBuffer);
+
                         if (xio_send(tls_io_instance->socket_io, output_buffers[0].pvBuffer, output_buffers[0].cbBuffer, unchecked_on_send_complete, NULL) != 0)
                         {
+                            LogError("TLS renegotiation token send failed, %lu bytes", output_buffers[0].cbBuffer);
                             tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
                             indicate_error(tls_io_instance);
                         }
@@ -1153,11 +1167,14 @@ void tlsio_schannel_destroy(CONCRETE_IO_HANDLE tls_io)
             }
             else
             {
+                LogInfo("TLS closing: cancelling pending send, %zu bytes queued", pending_send->length);
+
                 if (pending_send->on_send_complete != NULL)
                 {
                     pending_send->on_send_complete(pending_send->on_send_complete_context, IO_SEND_CANCELLED);
                 }
 
+                LogInfo("TLS pending send cancelled during close, %zu bytes discarded", pending_send->length);
                 free(pending_send->bytes);
                 free(pending_send);
             }
