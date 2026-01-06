@@ -846,7 +846,6 @@ static int decode_ssl_received_bytes(TLS_IO_INSTANCE* tls_io_instance)
         rcv_bytes = SSL_read(tls_io_instance->ssl, buffer, sizeof(buffer));
         if (rcv_bytes > 0)
         {
-            LogInfo("Decrypted %d bytes of TLS application data", rcv_bytes);
             if (tls_io_instance->on_bytes_received == NULL)
             {
                 LogError("NULL on_bytes_received.");
@@ -874,7 +873,6 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
 {
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
 
-    LogInfo("Received %zu raw bytes from underlying IO (state=%d)", size, tls_io_instance->tlsio_state);
     int written = BIO_write(tls_io_instance->in_bio, buffer, (int)size);
     if (written != (int)size)
     {
