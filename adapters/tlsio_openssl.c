@@ -581,9 +581,6 @@ static int openssl_static_locks_install(void)
                     break;
                 }
             }
-                    tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
-                    IO_OPEN_RESULT_DETAILED error_result = { IO_OPEN_ERROR, __FAILURE__ };
-                    indicate_open_complete(tls_io_instance, error_result);
 
             if (i != CRYPTO_num_locks())
             {
