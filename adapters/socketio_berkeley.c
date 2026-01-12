@@ -750,6 +750,7 @@ int socketio_open(CONCRETE_IO_HANDLE socket_io, ON_IO_OPEN_COMPLETE on_io_open_c
                                             result = 0;
                                         }
                                     }
+                                }
                             }
                             else
                             {
