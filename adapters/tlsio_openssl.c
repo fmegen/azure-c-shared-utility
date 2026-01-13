@@ -1177,14 +1177,14 @@ static int save_cert_crl_memory(X509 *cert, X509_CRL *crlp)
         if (0 == X509_NAME_cmp(issuer_crl, issuer_cert))
         {
             LogInfo("updating existing crl in memory cache");
-            void *leak = (void *)malloc(sizeof(char));
+//            void *leak = (void *)malloc(sizeof(char));
 
             X509_CRL_free(crl);
 
             crl_cache[n] = crlp;
 
             lockResult = Unlock(crl_cache_lock);
-            return 1;
+            return 2;
         }
     }
 
@@ -1498,6 +1498,7 @@ static int load_cert_crl_file(X509 *cert, const char* suffix, X509_CRL **pCrl)
 
         *pCrl = crl;
         ret = 1;
+        break;
     }
 
     return ret;
@@ -1582,10 +1583,22 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
     if (crl)
     {
         // save it to memory
-        save_cert_crl_memory(cert, crl);
-
-        // try to update file in cache
-        save_cert_crl_file(cert, suffix, crl);
+        int memoryResult = save_cert_crl_memory(cert, crl);
+        if (!memoryResult)
+        {
+            LogError("Could not save CRL to memory cache.");
+        }
+        else if(memoryResult == 2)
+        {
+            LogInfo("CRL updated in memory cache.");
+        }
+        else
+        {
+            LogInfo("CRL saved to memory cache.");
+            // try to update file in cache
+            save_cert_crl_file(cert, suffix, crl);
+        }
+        
     }
 
     return crl;
