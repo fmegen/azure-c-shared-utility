@@ -876,7 +876,6 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
                         if (send_result == INVALID_SOCKET && errno == EAGAIN) /*send says "come back later" with EAGAIN - likely the socket buffer cannot accept more data*/
                         {
                             // put the full message in the queue
-                            LogInfo("Send would block on fd=%d; queueing %zu bytes", socket_io_instance->socket, size);
                             send_result = 0;
                         }
 
@@ -888,7 +887,6 @@ int socketio_send(CONCRETE_IO_HANDLE socket_io, const void* buffer, size_t size,
                         }
                         else
                         {
-                            LogInfo("Sent %zu bytes immediately on fd=%d, queuing remaining %zu bytes", (size_t)send_result, socket_io_instance->socket, size - send_result);
                             result = 0;
                         }
                     }
@@ -936,7 +934,6 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
                     if (errno == EAGAIN) /*send says "come back later" with EAGAIN - likely the socket buffer cannot accept more data*/
                     {
                         /*do nothing until next dowork */
-                        LogInfo("Send would block on fd=%d while flushing %zu bytes; will retry", socket_io_instance->socket, pending_socket_io->size);
                         break;
                     }
                     else
@@ -956,7 +953,6 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
                     size_t remaining = pending_socket_io->size - send_result;
                     (void)memmove(pending_socket_io->bytes, pending_socket_io->bytes + send_result, remaining);
                     pending_socket_io->size = remaining;
-                    LogInfo("Partial send on fd=%d flushed %zu bytes, %zu bytes remain queued", socket_io_instance->socket, (size_t)send_result, remaining);
                     break;
                 }
             }
@@ -988,7 +984,6 @@ void socketio_dowork(CONCRETE_IO_HANDLE socket_io)
                 received = recv(socket_io_instance->socket, socket_io_instance->recv_bytes, RECEIVE_BYTES_VALUE, 0);
                 if (received > 0)
                 {
-                    LogInfo("Received %zd bytes on socket fd=%d", received, socket_io_instance->socket);
                     if (socket_io_instance->on_bytes_received != NULL)
                     {
                         /* Explicitly ignoring here the result of the callback */
