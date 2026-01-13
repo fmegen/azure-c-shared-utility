@@ -689,10 +689,7 @@ static void send_handshake_bytes(TLS_IO_INSTANCE* tls_io_instance)
         {
             if (ssl_err == SSL_ERROR_SSL)
             {
-                char err_buf[256];
-                unsigned long err_code = ERR_get_error();
-                ERR_error_string_n(err_code, err_buf, sizeof(err_buf));
-                LogError("TLS handshake failed with SSL error: %s (code: %lu)", err_buf, err_code);
+                LogError("TLS handshake failed with SSL error: %s", ERR_error_string(ERR_get_error(), NULL));
             }
             else
             {
