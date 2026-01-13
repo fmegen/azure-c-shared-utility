@@ -1156,6 +1156,7 @@ static int save_cert_crl_memory(X509 *cert, X509_CRL *crlp)
         crlp->references++;
 #endif
     }
+
     LogInfo("saving crl to memory cache");
 
     // update existing
@@ -1177,7 +1178,6 @@ static int save_cert_crl_memory(X509 *cert, X509_CRL *crlp)
         if (0 == X509_NAME_cmp(issuer_crl, issuer_cert))
         {
             LogInfo("updating existing crl in memory cache");
-//            void *leak = (void *)malloc(sizeof(char));
 
             X509_CRL_free(crl);
 
