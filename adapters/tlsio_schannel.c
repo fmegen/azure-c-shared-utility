@@ -696,8 +696,6 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                                 }
                                 else
                                 {
-                                    LogInfo("TLS pending send flush starting, %zu bytes", pending_send->length);
-
                                     if (internal_send(tls_io_instance, pending_send->bytes, pending_send->length, pending_send->on_send_complete, pending_send->on_send_complete_context) != 0)
                                     {
                                         LogError("send failed");
@@ -705,7 +703,6 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                                     }
                                     else
                                     {
-                                        LogInfo("TLS pending send completed successfully, %zu bytes sent", pending_send->length);
                                     }
 
                                     free(pending_send->bytes);
@@ -845,7 +842,6 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                         /* notify of the received data */
                         if (tls_io_instance->on_bytes_received != NULL)
                         {
-                            LogInfo("TLS decrypted application data: %lu bytes", security_buffers[1].cbBuffer);
                             tls_io_instance->on_bytes_received(tls_io_instance->on_bytes_received_context, (const unsigned char *) security_buffers[1].pvBuffer, security_buffers[1].cbBuffer);
                         }
 
