@@ -1161,14 +1161,6 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                 }
                 else
                 {
-                    if (uws_client->stream_buffer_count == 0)
-                    {
-                        LogInfo("Received %zu bytes while waiting for WebSocket upgrade response", size);
-                    }
-                    else
-                    {
-                        LogInfo("Received %zu bytes while waiting for WebSocket upgrade response (total buffered %zu)", size, uws_client->stream_buffer_count + size);
-                    }
                     uws_client->stream_buffer = new_received_bytes;
                     (void)memcpy(uws_client->stream_buffer + uws_client->stream_buffer_count, buffer, size);
                     uws_client->stream_buffer_count += size;
@@ -1197,8 +1189,6 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
                     uws_client->stream_buffer = new_received_bytes;
                     (void)memcpy(uws_client->stream_buffer + uws_client->stream_buffer_count, buffer, size);
                     uws_client->stream_buffer_count += size;
-
-                    LogInfo("Received %zu bytes of WebSocket data while OPEN (total buffered %zu)", size, uws_client->stream_buffer_count);
 
                     // One extra element was allocated. Initialize it.
                     uws_client->stream_buffer[uws_client->stream_buffer_count] = 0;
