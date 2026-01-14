@@ -2525,7 +2525,6 @@ int tlsio_openssl_send(CONCRETE_IO_HANDLE tls_io, const void* buffer, size_t siz
                 return result;
             }
 
-            LogInfo("Sending %zu bytes over TLS to %s", size, (tls_io_instance->hostname != NULL) ? tls_io_instance->hostname : "<unknown>");
             res = SSL_write(tls_io_instance->ssl, buffer, (int)size);
             if (res != (int)size)
             {
