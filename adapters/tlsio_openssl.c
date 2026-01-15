@@ -89,6 +89,7 @@ struct CRYPTO_dynlock_value
 static const char* const OPTION_UNDERLYING_IO_OPTIONS = "underlying_io_options";
 #define SSL_DO_HANDSHAKE_SUCCESS 1
 static int g_ssl_crl_max_size_in_kb = 10 * 1024;
+static LOCK_HANDLE crl_cache_lock;
 
 /*this function will clone an option given by name and value*/
 static void* tlsio_openssl_CloneOption(const char* name, const void* value)
@@ -942,7 +943,14 @@ static int load_cert_crl_http(
         goto error;
     }
 
+    LOCK_RESULT lockResult = Lock(crl_cache_lock);
+    if (LOCK_OK != lockResult)
+    {
+        // could not lock
+        goto error;
+    }
     OCSP_set_max_response_length(rctx, g_ssl_crl_max_size_in_kb * 1024);
+    lockResult = Unlock(crl_cache_lock);
 
     if (!OCSP_REQ_CTX_http(rctx, "GET", isHostnameSet ? url : path))
     {
@@ -1083,7 +1091,6 @@ static bool crl_valid(X509_CRL *crl)
 }
 
 
-static LOCK_HANDLE crl_cache_lock;
 static int crl_cache_size = 0;
 static X509_CRL** crl_cache = NULL;
 static int load_cert_crl_memory(X509 *cert, X509_CRL **pCrl)
@@ -2816,8 +2823,18 @@ int tlsio_openssl_setoption(CONCRETE_IO_HANDLE tls_io, const char* optionName, c
             }
             else
             {
-                g_ssl_crl_max_size_in_kb = *(const int*)value;
-                result = 0;
+                LOCK_RESULT lockResult = Lock(crl_cache_lock);
+                if (LOCK_OK != lockResult)
+                {
+                    LogError("Unable to acquire CRL lock");
+                    result = __FAILURE__;
+                }
+                else
+                {
+                    g_ssl_crl_max_size_in_kb = *(const int*)value;
+                    lockResult = Unlock(crl_cache_lock);
+                    result = 0;
+                }
             }
         }
         else if (strcmp(OPTION_DISABLE_DEFAULT_VERIFY_PATHS, optionName) == 0)
