@@ -680,6 +680,7 @@ static void send_handshake_bytes(TLS_IO_INSTANCE* tls_io_instance)
     // ERR_clear_error must be called before any call that might set an
     // SSL_get_error result
     ERR_clear_error();
+    const char* hostname = tls_io_instance->hostname ? tls_io_instance->hostname : "<unknown>";
     hsret = SSL_do_handshake(tls_io_instance->ssl);
     if (hsret != SSL_DO_HANDSHAKE_SUCCESS)
     {
@@ -688,11 +689,11 @@ static void send_handshake_bytes(TLS_IO_INSTANCE* tls_io_instance)
         {
             if (ssl_err == SSL_ERROR_SSL)
             {
-                LogError("%s", ERR_error_string(ERR_get_error(), NULL));
+                LogError("TLS handshake failed with SSL error: %s", ERR_error_string(ERR_get_error(), NULL));
             }
             else
             {
-                LogError("SSL handshake failed: %d", ssl_err);
+                LogError("TLS handshake failed: ssl_err=%d", ssl_err);
             }
             tls_io_instance->tlsio_state = TLSIO_STATE_HANDSHAKE_FAILED;
         }
@@ -707,6 +708,7 @@ static void send_handshake_bytes(TLS_IO_INSTANCE* tls_io_instance)
     }
     else
     {
+        LogInfo("TLS handshake completed successfully with %s", hostname);
         tls_io_instance->tlsio_state = TLSIO_STATE_OPEN;
         IO_OPEN_RESULT_DETAILED ok_result = { IO_OPEN_OK, 0 };
         indicate_open_complete(tls_io_instance, ok_result);
@@ -764,11 +766,13 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
 {
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
     IO_OPEN_RESULT open_result = open_result_detailed.result;
+    const char* hostname = (tls_io_instance && tls_io_instance->hostname) ? tls_io_instance->hostname : "<unknown>";
 
     if (tls_io_instance->tlsio_state == TLSIO_STATE_OPENING_UNDERLYING_IO)
     {
         if (open_result == IO_OPEN_OK)
         {
+            LogInfo("Underlying IO opened for %s, starting TLS handshake", hostname);
             tls_io_instance->tlsio_state = TLSIO_STATE_IN_HANDSHAKE;
 
             // Begin the handshake process here. It continues in on_underlying_io_bytes_received
@@ -777,14 +781,14 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
         else
         {
             tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
-            LogError("Could not open underlying IO: %d", open_result);
+            LogError("Could not open underlying IO for %s: result=%d, code=%d", hostname, open_result, open_result_detailed.code);
             open_result_detailed.result = IO_OPEN_ERROR;
             indicate_open_complete(tls_io_instance, open_result_detailed);
         }
     }
     else
     {
-        LogError("Invalid tlsio_state %d. Expected state is TLSIO_STATE_OPENING_UNDERLYING_IO.", tls_io_instance->tlsio_state);
+        LogError("Invalid tlsio_state %d for %s. Expected state is TLSIO_STATE_OPENING_UNDERLYING_IO.", tls_io_instance->tlsio_state, hostname);
         tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
         open_result_detailed.result = IO_OPEN_ERROR;
         indicate_open_complete(tls_io_instance, open_result_detailed);
@@ -794,6 +798,7 @@ static void on_underlying_io_open_complete(void* context, IO_OPEN_RESULT_DETAILE
 static void on_underlying_io_error(void* context)
 {
     TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
+    LogError("Underlying IO error in tlsio_openssl (state=%d)", tls_io_instance->tlsio_state);
 
     switch (tls_io_instance->tlsio_state)
     {
@@ -803,8 +808,10 @@ static void on_underlying_io_error(void* context)
     case TLSIO_STATE_OPENING_UNDERLYING_IO:
     case TLSIO_STATE_IN_HANDSHAKE:
         tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
-        IO_OPEN_RESULT_DETAILED error_result = { IO_OPEN_ERROR, __FAILURE__ };
-        indicate_open_complete(tls_io_instance, error_result);
+        {
+            IO_OPEN_RESULT_DETAILED error_result = { IO_OPEN_ERROR, __FAILURE__ };
+            indicate_open_complete(tls_io_instance, error_result);
+        }
         break;
 
     case TLSIO_STATE_OPEN:
@@ -863,7 +870,8 @@ static void on_underlying_io_bytes_received(void* context, const unsigned char* 
     int written = BIO_write(tls_io_instance->in_bio, buffer, (int)size);
     if (written != (int)size)
     {
-        tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
+            LogError("Error in BIO_write.");
+            tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
         indicate_error(tls_io_instance);
         log_ERR_get_error("Error in BIO_write.");
     }
@@ -1563,8 +1571,17 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
         {
             // try to load from web, exit loop if
             // successfully downloaded
+            LogInfo("Downloading CRL from: %s", urlptr);
             crl = load_crl(urlptr, FORMAT_HTTP);
-            if (crl) break;
+            if (crl)
+            {
+                LogInfo("CRL downloaded successfully from: %s", urlptr);
+                break;
+            }
+            else
+            {
+                LogInfo("CRL download failed from: %s", urlptr);
+            }
         }
     }
 
@@ -2366,6 +2383,7 @@ int tlsio_openssl_open(CONCRETE_IO_HANDLE tls_io, ON_IO_OPEN_COMPLETE on_io_open
     else
     {
         TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
+        const char* hostname = (tls_io_instance->hostname != NULL) ? tls_io_instance->hostname : "<unknown>";
 
         if (tls_io_instance->tlsio_state != TLSIO_STATE_NOT_OPEN)
         {
@@ -2374,6 +2392,7 @@ int tlsio_openssl_open(CONCRETE_IO_HANDLE tls_io, ON_IO_OPEN_COMPLETE on_io_open
         }
         else
         {
+            LogInfo("Opening TLS IO to %s", hostname);
             tls_io_instance->on_io_open_complete = on_io_open_complete;
             tls_io_instance->on_io_open_complete_context = on_io_open_complete_context;
 
@@ -2394,13 +2413,17 @@ int tlsio_openssl_open(CONCRETE_IO_HANDLE tls_io, ON_IO_OPEN_COMPLETE on_io_open
             else if (xio_open(tls_io_instance->underlying_io, on_underlying_io_open_complete, tls_io_instance,
                 on_underlying_io_bytes_received, tls_io_instance, on_underlying_io_error, tls_io_instance) != 0)
             {
-                LogError("Failed opening the underlying I/O.");
+                LogError("Failed opening the underlying I/O for TLS to %s.", tls_io_instance->hostname);
                 close_openssl_instance(tls_io_instance);
                 tls_io_instance->tlsio_state = TLSIO_STATE_NOT_OPEN;
                 result = __FAILURE__;
             }
             else
             {
+                if (tls_io_instance->tlsio_state == TLSIO_STATE_OPENING_UNDERLYING_IO)
+                {
+                    LogInfo("Opening underlying IO for TLS connection to %s", tls_io_instance->hostname);
+                }
                 result = 0;
             }
         }
@@ -2568,6 +2591,7 @@ void tlsio_openssl_dowork(CONCRETE_IO_HANDLE tls_io)
                 // can then gracefully shut things down here.
                 //
                 // Set the state to TLSIO_STATE_ERROR so close won't gripe about the state
+                LogInfo("Closing TLS IO after handshake failure for %s", (tls_io_instance->hostname != NULL) ? tls_io_instance->hostname : "<unknown>");
                 tls_io_instance->tlsio_state = TLSIO_STATE_ERROR;
                 tlsio_openssl_close(tls_io_instance, NULL, NULL);
                 IO_OPEN_RESULT_DETAILED error_result = { IO_OPEN_ERROR, __FAILURE__ };
