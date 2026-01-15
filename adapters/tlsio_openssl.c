@@ -1165,6 +1165,8 @@ static int save_cert_crl_memory(X509 *cert, X509_CRL *crlp)
 #endif
     }
 
+    LogInfo("saving crl to memory cache");
+
     // update existing
     X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
     for (int n = 0; n < crl_cache_size; n++)
@@ -1183,15 +1185,18 @@ static int save_cert_crl_memory(X509 *cert, X509_CRL *crlp)
 
         if (0 == X509_NAME_cmp(issuer_crl, issuer_cert))
         {
+            LogInfo("updating existing crl in memory cache");
+
             X509_CRL_free(crl);
 
             crl_cache[n] = crlp;
 
             lockResult = Unlock(crl_cache_lock);
-            return 1;
+            return 2;
         }
     }
 
+    LogInfo("adding new crl to memory cache");
     // not found, so try to find slot by purging outdated
     for (int n = 0; n < crl_cache_size; n++)
     {
@@ -1220,6 +1225,7 @@ static int save_cert_crl_memory(X509 *cert, X509_CRL *crlp)
         }
     }
 
+    LogInfo("expanding crl memory cache");
     // allocate bigger array
     X509_CRL** new_crl_cache;
     new_crl_cache = (X509_CRL**)malloc((crl_cache_size + 10) * sizeof(X509_CRL*));
@@ -1500,6 +1506,7 @@ static int load_cert_crl_file(X509 *cert, const char* suffix, X509_CRL **pCrl)
 
         *pCrl = crl;
         ret = 1;
+        break;
     }
 
     return ret;
@@ -1593,10 +1600,22 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
     if (crl)
     {
         // save it to memory
-        save_cert_crl_memory(cert, crl);
-
-        // try to update file in cache
-        save_cert_crl_file(cert, suffix, crl);
+        int memoryResult = save_cert_crl_memory(cert, crl);
+        if (!memoryResult)
+        {
+            LogError("Could not save CRL to memory cache.");
+        }
+        else if(memoryResult == 2)
+        {
+            LogInfo("CRL updated in memory cache.");
+        }
+        else
+        {
+            LogInfo("CRL saved to memory cache.");
+            // try to update file in cache
+            save_cert_crl_file(cert, suffix, crl);
+        }
+        
     }
 
     return crl;
@@ -2224,11 +2243,35 @@ int tlsio_openssl_init(void)
     return 0;
 }
 
+void clear_crl_cache()
+{
+    LogInfo("Clearing CRL cache\n");
+    for (int n = 0; n < crl_cache_size; n++)
+    {
+        X509_CRL *crl = crl_cache[n];
+        if (!crl)
+        {
+            continue;
+        }
+
+        LogInfo("crl entry %d \n", n);
+        crl_cache[n] = NULL;
+        X509_CRL_free(crl);
+    }
+
+    LogInfo("Freeing CRL cache\n");
+    free(crl_cache);
+    crl_cache = NULL;
+    crl_cache_size = 0;
+}
+
 void tlsio_openssl_deinit(void)
 {
+    LogInfo("Deinitializing OpenSSL.");
+    clear_crl_cache();
 #if !USE_OPENSSL_1_1_0_OR_UP
     // Clean-up (incl. locking callbacks) not required anymore for 1.1.0 or up.
-
+    
     openssl_dynamic_locks_uninstall();
     openssl_static_locks_uninstall();
 #ifndef __APPLE__

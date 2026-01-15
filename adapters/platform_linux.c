@@ -64,6 +64,7 @@ STRING_HANDLE platform_get_platform_info(void)
 
 void platform_deinit(void)
 {
+    LogInfo("platform_deinit called.");
 #ifdef USE_OPENSSL
     tlsio_openssl_deinit();
 #endif
