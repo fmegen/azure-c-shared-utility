@@ -1212,10 +1212,12 @@ static int save_cert_crl_memory(X509 *cert, const char *dp_url, X509_CRL *crlp)
     char *dp_url_copy = NULL;
     if (dp_url)
     {
-        dp_url_copy = (char*)malloc(strlen(dp_url) + 1);
-        if (dp_url_copy)
+        if(mallocAndStrcpy_s(&dp_url_copy, dp_url) != 0)
         {
-            strcpy(dp_url_copy, dp_url);
+            LogError("could not copy dp_url for memory cache");
+            X509_CRL_free(crlp);
+            lockResult = Unlock(crl_cache_lock);
+            return 0;
         }
     }
 
@@ -1304,6 +1306,8 @@ static int save_cert_crl_memory(X509 *cert, const char *dp_url, X509_CRL *crlp)
     new_crl_cache = (CRL_CACHE_ENTRY*)malloc((crl_cache_size + 10) * sizeof(CRL_CACHE_ENTRY));
     if (!new_crl_cache)
     {
+        LogError("could not expand crl memory cache");
+        X509_CRL_free(crlp);
         free(dp_url_copy);
         lockResult = Unlock(crl_cache_lock);
         return 0;
