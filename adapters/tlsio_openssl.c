@@ -1153,11 +1153,15 @@ static int load_cert_crl_memory(X509 *cert, const char *dp_url, X509_CRL **pCrl)
                 continue;
             }
         }
-        else if (dp_url || entry->dp_url)
+        else if (dp_url && !entry->dp_url)
         {
-            // One has URL, one doesn't - skip
+            // Caller has DP URL but cache entry doesn't - skip
+            // (entry is from old format or cert without CDP)
             continue;
         }
+        // Note: if dp_url is NULL (cert has no CDP), we accept any matching issuer
+        // for backward compatibility - the cert may share an issuer with other certs
+        // that do have CDPs and cached CRLs.
 
         bool valid = crl_valid(entry->crl);
         if (!valid)
@@ -1627,7 +1631,19 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
 
     if (!crldp || sk_DIST_POINT_num(crldp) == 0)
     {
-        LogError("No CRL distribution points provided.");
+        // No distribution points available.
+        // Try cache lookup with NULL dp_url for backward compatibility
+        // (may find CRL cached by issuer only from previous versions).
+        if (load_cert_crl_memory(cert, NULL, &crl) && crl)
+        {
+            return crl;
+        }
+        if (load_cert_crl_file(cert, NULL, suffix, &crl) && crl)
+        {
+            save_cert_crl_memory(cert, NULL, crl);
+            return crl;
+        }
+        // Cannot download without distribution points
         return NULL;
     }
 
