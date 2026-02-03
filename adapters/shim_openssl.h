@@ -51,6 +51,7 @@
 #include "openssl/x509.h"
 #include "openssl/pem.h"
 #include "openssl/err.h"
+#include "openssl/sha.h"
 
 #if defined(USE_OPENSSL_DYNAMIC)
 
@@ -101,6 +102,7 @@
     REQUIRED_FUNCTION_1_0_2(EVP_cleanup) \
     REQUIRED_FUNCTION_1_0_2(FIPS_mode_set) \
     REQUIRED_FUNCTION(GENERAL_NAME_get0_value) \
+    REQUIRED_FUNCTION(SHA256) \
     REQUIRED_FUNCTION_NOT_3_0_X(OCSP_REQ_CTX_add1_header) \
     REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_add1_header) \
     REQUIRED_FUNCTION_NOT_3_0_X(OCSP_REQ_CTX_free) \
@@ -246,6 +248,7 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define EVP_PKEY_free EVP_PKEY_free_ptr
 #define EVP_PKEY_get1_RSA EVP_PKEY_get1_RSA_ptr
 #define GENERAL_NAME_get0_value GENERAL_NAME_get0_value_ptr
+#define SHA256 SHA256_ptr
 #define PEM_read_bio_PrivateKey PEM_read_bio_PrivateKey_ptr
 #define PEM_read_bio_X509 PEM_read_bio_X509_ptr
 #define PEM_read_bio_X509_AUX PEM_read_bio_X509_AUX_ptr

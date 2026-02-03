@@ -4,7 +4,6 @@
 #include <stdlib.h>
 
 #include "shim_openssl.h"
-#include <openssl/sha.h>
 
 #include <stdio.h>
 #if defined(WIN32)
@@ -1101,9 +1100,9 @@ static unsigned long hash_dp_url(const char *dp_url)
         return 0;
     }
     
-    // Use SHA1 to hash the URL, same pattern as X509_NAME_hash
-    unsigned char md[SHA_DIGEST_LENGTH];
-    SHA1((const unsigned char*)dp_url, strlen(dp_url), md);
+    // Use SHA256 to hash the URL, same pattern as X509_NAME_hash
+    unsigned char md[SHA256_DIGEST_LENGTH];
+    SHA256((const unsigned char*)dp_url, strlen(dp_url), md);
     
     // Return first 4 bytes as unsigned long (same as X509_NAME_hash does)
     return (unsigned long)md[0] | ((unsigned long)md[1] << 8L) |
