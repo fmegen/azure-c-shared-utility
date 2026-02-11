@@ -1111,8 +1111,6 @@ static unsigned long hash_dp_url(const char *dp_url)
 
 static int load_cert_crl_memory(X509 *cert, const char *dp_url, X509_CRL **pCrl)
 {
-    X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
-
     // init return values
     int ret = 0;
     *pCrl = NULL;
@@ -1132,36 +1130,34 @@ static int load_cert_crl_memory(X509 *cert, const char *dp_url, X509_CRL **pCrl)
             continue;
         }
 
-        // Check issuer match
-        X509_NAME *issuer_crl = X509_CRL_get_issuer(entry->crl);
-        if (!issuer_crl || !issuer_cert)
-        {
-            continue;
-        }
-
-        if (0 != X509_NAME_cmp(issuer_crl, issuer_cert))
-        {
-            continue;
-        }
-
-        // Check distribution point URL match
+        // Match by URL if available
         if (dp_url && entry->dp_url)
         {
             if (0 != strcmp(dp_url, entry->dp_url))
             {
-                // Same issuer but different distribution point - skip
+                continue;
+            }
+            // URLs match - this is our CRL
+        }
+        else if (dp_url || entry->dp_url)
+        {
+            // One has URL, one doesn't - not a match
+            continue;
+        }
+        else
+        {
+            // Both NULL - fall back to issuer match for backward compatibility
+            X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
+            X509_NAME *issuer_crl = X509_CRL_get_issuer(entry->crl);
+            if (!issuer_crl || !issuer_cert)
+            {
+                continue;
+            }
+            if (0 != X509_NAME_cmp(issuer_crl, issuer_cert))
+            {
                 continue;
             }
         }
-        else if (dp_url && !entry->dp_url)
-        {
-            // Caller has DP URL but cache entry doesn't - skip
-            // (entry is from old format or cert without CDP)
-            continue;
-        }
-        // Note: if dp_url is NULL (cert has no CDP), we accept any matching issuer
-        // for backward compatibility - the cert may share an issuer with other certs
-        // that do have CDPs and cached CRLs.
 
         bool valid = crl_valid(entry->crl);
         if (!valid)
@@ -1223,8 +1219,7 @@ static int save_cert_crl_memory(X509 *cert, const char *dp_url, X509_CRL *crlp)
 
     LogInfo("saving crl to memory cache");
 
-    // update existing entry with matching issuer AND dp_url
-    X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
+    // update existing entry with matching URL (or issuer if no URL)
     for (int n = 0; n < crl_cache_size; n++)
     {
         CRL_CACHE_ENTRY *entry = &crl_cache[n];
@@ -1233,28 +1228,33 @@ static int save_cert_crl_memory(X509 *cert, const char *dp_url, X509_CRL *crlp)
             continue;
         }
 
-        X509_NAME *issuer_crl = X509_CRL_get_issuer(entry->crl);
-        if (!issuer_crl || !issuer_cert)
-        {
-            continue;
-        }
-
-        if (0 != X509_NAME_cmp(issuer_crl, issuer_cert))
-        {
-            continue;
-        }
-
-        // Check distribution point URL match
+        // Match by URL if available
         if (dp_url && entry->dp_url)
         {
             if (0 != strcmp(dp_url, entry->dp_url))
             {
                 continue;
             }
+            // URLs match - update this entry
         }
         else if (dp_url || entry->dp_url)
         {
+            // One has URL, one doesn't - not a match
             continue;
+        }
+        else
+        {
+            // Both NULL - fall back to issuer match
+            X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
+            X509_NAME *issuer_crl = X509_CRL_get_issuer(entry->crl);
+            if (!issuer_crl || !issuer_cert)
+            {
+                continue;
+            }
+            if (0 != X509_NAME_cmp(issuer_crl, issuer_cert))
+            {
+                continue;
+            }
         }
 
         LogInfo("updating existing crl in memory cache");
@@ -1554,15 +1554,23 @@ static int load_cert_crl_file(X509 *cert, const char *dp_url, const char* suffix
         return 0;
     }
 
-    // we need the issuer hash and dp_url hash to find the file on disk
-    X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
-    unsigned long issuer_hash = issuer_cert ? X509_NAME_hash(issuer_cert) : 0;
-    unsigned long url_hash = hash_dp_url(dp_url);
+    unsigned long hash;
+    if (dp_url)
+    {
+        // Use URL hash for partitioned CRLs
+        hash = hash_dp_url(dp_url);
+    }
+    else
+    {
+        // Fall back to issuer hash for backward compatibility
+        X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
+        hash = issuer_cert ? X509_NAME_hash(issuer_cert) : 0;
+    }
 
     // try to read from file
     for (int i = 0; i < 10; i++)
     {
-        sprintf(buf, "%s/%08lx_%08lx.%s.%d", prefix, issuer_hash, url_hash, suffix, i);
+        sprintf(buf, "%s/%08lx.%s.%d", prefix, hash, suffix, i);
 
         // try to read from disk, exit loop, if
         // none found
@@ -1607,14 +1615,22 @@ static int save_cert_crl_file(X509 *cert, const char *dp_url, const char* suffix
         return 0;
     }
 
-    // we need the issuer hash and dp_url hash to find the file on disk
-    X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
-    unsigned long issuer_hash = issuer_cert ? X509_NAME_hash(issuer_cert) : 0;
-    unsigned long url_hash = hash_dp_url(dp_url);
+    unsigned long hash;
+    if (dp_url)
+    {
+        // Use URL hash for partitioned CRLs
+        hash = hash_dp_url(dp_url);
+    }
+    else
+    {
+        // Fall back to issuer hash for backward compatibility
+        X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
+        hash = issuer_cert ? X509_NAME_hash(issuer_cert) : 0;
+    }
 
     for (int i = 0; crl && i < 10; i++)
     {
-        sprintf(buf, "%s/%08lx_%08lx.%s.%d", prefix, issuer_hash, url_hash, suffix, i);
+        sprintf(buf, "%s/%08lx.%s.%d", prefix, hash, suffix, i);
 
         // try to write to disk, exit loop, if
         // written (note: no file will be overwritten).
