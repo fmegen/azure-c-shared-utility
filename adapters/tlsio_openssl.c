@@ -1093,27 +1093,36 @@ typedef struct {
 
 static CRL_CACHE_ENTRY* crl_cache = NULL;
 
-static unsigned long hash_dp_url(const char *dp_url)
+// Converts SHA256 hash to hex string. Caller must provide buffer of at least 65 bytes.
+static void hash_dp_url(const char *dp_url, char *out_hash)
 {
     if (!dp_url || !*dp_url)
     {
-        return 0;
+        out_hash[0] = '\0';
+        return;
     }
     
-    // Use SHA256 to hash the URL, same pattern as X509_NAME_hash
     unsigned char md[SHA256_DIGEST_LENGTH];
     SHA256((const unsigned char*)dp_url, strlen(dp_url), md);
     
-    // Return first 4 bytes as unsigned long (same as X509_NAME_hash does)
-    return (unsigned long)md[0] | ((unsigned long)md[1] << 8L) |
-           ((unsigned long)md[2] << 16L) | ((unsigned long)md[3] << 24L);
+    // Convert to hex string
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+    {
+        sprintf(out_hash + (i * 2), "%02x", md[i]);
+    }
+    out_hash[SHA256_DIGEST_LENGTH * 2] = '\0';
 }
 
-static int load_cert_crl_memory(X509 *cert, const char *dp_url, X509_CRL **pCrl)
+static int load_cert_crl_memory(const char *dp_url, X509_CRL **pCrl)
 {
     // init return values
     int ret = 0;
     *pCrl = NULL;
+
+    if (!dp_url)
+    {
+        return 0;
+    }
 
     LOCK_RESULT lockResult = Lock(crl_cache_lock);
     if (LOCK_OK != lockResult)
@@ -1125,38 +1134,15 @@ static int load_cert_crl_memory(X509 *cert, const char *dp_url, X509_CRL **pCrl)
     for (int n = 0; n < crl_cache_size; n++)
     {
         CRL_CACHE_ENTRY *entry = &crl_cache[n];
-        if (!entry->crl)
+        if (!entry->crl || !entry->dp_url)
         {
             continue;
         }
 
-        // Match by URL if available
-        if (dp_url && entry->dp_url)
+        // Match by URL
+        if (0 != strcmp(dp_url, entry->dp_url))
         {
-            if (0 != strcmp(dp_url, entry->dp_url))
-            {
-                continue;
-            }
-            // URLs match - this is our CRL
-        }
-        else if (dp_url || entry->dp_url)
-        {
-            // One has URL, one doesn't - not a match
             continue;
-        }
-        else
-        {
-            // Both NULL - fall back to issuer match for backward compatibility
-            X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
-            X509_NAME *issuer_crl = X509_CRL_get_issuer(entry->crl);
-            if (!issuer_crl || !issuer_cert)
-            {
-                continue;
-            }
-            if (0 != X509_NAME_cmp(issuer_crl, issuer_cert))
-            {
-                continue;
-            }
         }
 
         bool valid = crl_valid(entry->crl);
@@ -1185,8 +1171,13 @@ static int load_cert_crl_memory(X509 *cert, const char *dp_url, X509_CRL **pCrl)
     return ret;
 }
 
-static int save_cert_crl_memory(X509 *cert, const char *dp_url, X509_CRL *crlp)
+static int save_cert_crl_memory(const char *dp_url, X509_CRL *crlp)
 {
+    if (!dp_url)
+    {
+        return 0;
+    }
+
     LOCK_RESULT lockResult = Lock(crl_cache_lock);
 
     if (LOCK_OK != lockResult)
@@ -1206,55 +1197,28 @@ static int save_cert_crl_memory(X509 *cert, const char *dp_url, X509_CRL *crlp)
 
     // Duplicate the URL for storage
     char *dp_url_copy = NULL;
-    if (dp_url)
+    if(mallocAndStrcpy_s(&dp_url_copy, dp_url) != 0)
     {
-        if(mallocAndStrcpy_s(&dp_url_copy, dp_url) != 0)
-        {
-            LogError("could not copy dp_url for memory cache");
-            X509_CRL_free(crlp);
-            lockResult = Unlock(crl_cache_lock);
-            return 0;
-        }
+        LogError("could not copy dp_url for memory cache");
+        X509_CRL_free(crlp);
+        lockResult = Unlock(crl_cache_lock);
+        return 0;
     }
 
     LogInfo("saving crl to memory cache");
 
-    // update existing entry with matching URL (or issuer if no URL)
+    // update existing entry with matching URL
     for (int n = 0; n < crl_cache_size; n++)
     {
         CRL_CACHE_ENTRY *entry = &crl_cache[n];
-        if (!entry->crl)
+        if (!entry->crl || !entry->dp_url)
         {
             continue;
         }
 
-        // Match by URL if available
-        if (dp_url && entry->dp_url)
+        if (0 != strcmp(dp_url, entry->dp_url))
         {
-            if (0 != strcmp(dp_url, entry->dp_url))
-            {
-                continue;
-            }
-            // URLs match - update this entry
-        }
-        else if (dp_url || entry->dp_url)
-        {
-            // One has URL, one doesn't - not a match
             continue;
-        }
-        else
-        {
-            // Both NULL - fall back to issuer match
-            X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
-            X509_NAME *issuer_crl = X509_CRL_get_issuer(entry->crl);
-            if (!issuer_crl || !issuer_cert)
-            {
-                continue;
-            }
-            if (0 != X509_NAME_cmp(issuer_crl, issuer_cert))
-            {
-                continue;
-            }
         }
 
         LogInfo("updating existing crl in memory cache");
@@ -1536,7 +1500,7 @@ static int is_valid_crl(X509 *cert, X509_CRL *crl)
 static int load_cert_crl_file(X509 *cert, const char *dp_url, const char* suffix, X509_CRL **pCrl)
 {
     static bool logCacheUsage = 0;
-    char buf[256];
+    char buf[512];
 
     int ret = 0;
     *pCrl = NULL;
@@ -1554,23 +1518,17 @@ static int load_cert_crl_file(X509 *cert, const char *dp_url, const char* suffix
         return 0;
     }
 
-    unsigned long hash;
-    if (dp_url)
+    char hash_str[65]; // 64 hex chars + null terminator
+    if (!dp_url)
     {
-        // Use URL hash for partitioned CRLs
-        hash = hash_dp_url(dp_url);
+        return 0;
     }
-    else
-    {
-        // Fall back to issuer hash for backward compatibility
-        X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
-        hash = issuer_cert ? X509_NAME_hash(issuer_cert) : 0;
-    }
+    hash_dp_url(dp_url, hash_str);
 
     // try to read from file
     for (int i = 0; i < 10; i++)
     {
-        sprintf(buf, "%s/%08lx.%s.%d", prefix, hash, suffix, i);
+        sprintf(buf, "%s/%s.%s.%d", prefix, hash_str, suffix, i);
 
         // try to read from disk, exit loop, if
         // none found
@@ -1602,10 +1560,15 @@ static int load_cert_crl_file(X509 *cert, const char *dp_url, const char* suffix
     return ret;
 }
 
-static int save_cert_crl_file(X509 *cert, const char *dp_url, const char* suffix, X509_CRL *crl)
+static int save_cert_crl_file(const char *dp_url, const char* suffix, X509_CRL *crl)
 {
-    char buf[256];
+    char buf[512];
     int ret = 0;
+
+    if (!dp_url)
+    {
+        return 0;
+    }
 
     char* prefix = NULL;
     if (NULL == (prefix = getenv("TMP")) &&
@@ -1615,22 +1578,12 @@ static int save_cert_crl_file(X509 *cert, const char *dp_url, const char* suffix
         return 0;
     }
 
-    unsigned long hash;
-    if (dp_url)
-    {
-        // Use URL hash for partitioned CRLs
-        hash = hash_dp_url(dp_url);
-    }
-    else
-    {
-        // Fall back to issuer hash for backward compatibility
-        X509_NAME *issuer_cert = cert ? X509_get_issuer_name(cert) : NULL;
-        hash = issuer_cert ? X509_NAME_hash(issuer_cert) : 0;
-    }
+    char hash_str[65]; // 64 hex chars + null terminator
+    hash_dp_url(dp_url, hash_str);
 
     for (int i = 0; crl && i < 10; i++)
     {
-        sprintf(buf, "%s/%08lx.%s.%d", prefix, hash, suffix, i);
+        sprintf(buf, "%s/%s.%s.%d", prefix, hash_str, suffix, i);
 
         // try to write to disk, exit loop, if
         // written (note: no file will be overwritten).
@@ -1651,19 +1604,7 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
 
     if (!crldp || sk_DIST_POINT_num(crldp) == 0)
     {
-        // No distribution points available.
-        // Try cache lookup with NULL dp_url for backward compatibility
-        // (may find CRL cached by issuer only from previous versions).
-        if (load_cert_crl_memory(cert, NULL, &crl) && crl)
-        {
-            return crl;
-        }
-        if (load_cert_crl_file(cert, NULL, suffix, &crl) && crl)
-        {
-            save_cert_crl_memory(cert, NULL, crl);
-            return crl;
-        }
-        // Cannot download without distribution points
+        // No distribution points available - cannot fetch or cache CRL
         return NULL;
     }
 
@@ -1679,7 +1620,7 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
         }
 
         // Check memory cache for this specific DP
-        if (load_cert_crl_memory(cert, urlptr, &crl) && crl)
+        if (load_cert_crl_memory(urlptr, &crl) && crl)
         {
             return crl;
         }
@@ -1688,7 +1629,7 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
         if (load_cert_crl_file(cert, urlptr, suffix, &crl) && crl)
         {
             // Save to memory cache before returning
-            save_cert_crl_memory(cert, urlptr, crl);
+            save_cert_crl_memory(urlptr, crl);
             return crl;
         }
 
@@ -1700,7 +1641,7 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
             LogInfo("CRL downloaded successfully from: %s", urlptr);
 
             // Save to memory cache
-            int memoryResult = save_cert_crl_memory(cert, urlptr, crl);
+            int memoryResult = save_cert_crl_memory(urlptr, crl);
             if (!memoryResult)
             {
                 LogError("Could not save CRL to memory cache.");
@@ -1713,7 +1654,7 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
             {
                 LogInfo("CRL saved to memory cache.");
                 // Also save to disk cache
-                save_cert_crl_file(cert, urlptr, suffix, crl);
+                save_cert_crl_file(urlptr, suffix, crl);
             }
 
             return crl;
