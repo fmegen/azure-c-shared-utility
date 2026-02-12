@@ -1525,21 +1525,25 @@ static int load_cert_crl_file(X509 *cert, const char *dp_url, const char* suffix
     }
     hash_dp_url(dp_url, hash_str);
 
+    LogInfo("Checking CRL cache for %s\n", dp_url);
+
     // try to read from file
     for (int i = 0; i < 10; i++)
     {
         sprintf(buf, "%s/%s.%s.%d", prefix, hash_str, suffix, i);
-
+        LogInfo("Checking CRL cache file: %s\n", buf);
         // try to read from disk, exit loop, if
         // none found
         X509_CRL* crl = load_crl(buf, FORMAT_PEM);
         if (!crl)
         {
+            LogInfo("CRL not found in cache file: %s\n", buf);
             continue;
         }
 
         if (!is_valid_crl(cert, crl))
         {
+            LogInfo("CRL in cache file %s is not valid, removing\n", buf);
             LogInfo("DELETE %s\n", buf);
 
 #ifdef WIN32
@@ -1554,6 +1558,7 @@ static int load_cert_crl_file(X509 *cert, const char *dp_url, const char* suffix
 
         *pCrl = crl;
         ret = 1;
+        LogInfo("CRL loaded from cache file: %s\n", buf);
         break;
     }
 
@@ -1604,6 +1609,7 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
 
     if (!crldp || sk_DIST_POINT_num(crldp) == 0)
     {
+        LogInfo("No CRL distribution points found in certificate.\n");
         // No distribution points available - cannot fetch or cache CRL
         return NULL;
     }
@@ -1655,6 +1661,7 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
                 LogInfo("CRL saved to memory cache.");
                 // Also save to disk cache
                 save_cert_crl_file(urlptr, suffix, crl);
+                LogInfo("CRL save complete.");
             }
 
             return crl;
@@ -1701,7 +1708,8 @@ static STACK_OF(X509_CRL) *crls_http_cb(X509_STORE_CTX *ctx, X509_NAME *nm)
     }
 
     crl = load_crl_crldp(x, "crl", crldp);
-
+    LogInfo("CRL load complete. %x", crl);
+    
     sk_DIST_POINT_pop_free(crldp, DIST_POINT_free);
     if (!crl)
     {
