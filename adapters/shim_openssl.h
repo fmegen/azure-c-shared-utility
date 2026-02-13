@@ -80,6 +80,7 @@
     REQUIRED_FUNCTION(BIO_write) \
     REQUIRED_FUNCTION_1_0_2(CRYPTO_cleanup_all_ex_data) \
     REQUIRED_FUNCTION(CRYPTO_free) \
+    REQUIRED_FUNCTION(CRYPTO_get_ex_new_index) \
     REQUIRED_FUNCTION_1_0_2(CRYPTO_num_locks) \
     REQUIRED_FUNCTION_1_0_2(CRYPTO_set_dynlock_create_callback) \
     REQUIRED_FUNCTION_1_0_2(CRYPTO_set_dynlock_destroy_callback) \
@@ -103,6 +104,8 @@
     REQUIRED_FUNCTION_1_0_2(FIPS_mode_set) \
     REQUIRED_FUNCTION(GENERAL_NAME_get0_value) \
     REQUIRED_FUNCTION(SHA256) \
+    REQUIRED_FUNCTION(X509_get_pubkey) \
+    REQUIRED_FUNCTION(X509_CRL_verify) \
     REQUIRED_FUNCTION_NOT_3_0_X(OCSP_REQ_CTX_add1_header) \
     REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_add1_header) \
     REQUIRED_FUNCTION_NOT_3_0_X(OCSP_REQ_CTX_free) \
@@ -160,18 +163,28 @@
     REQUIRED_FUNCTION_1_0_2(TLSv1_2_method) \
     REQUIRED_FUNCTION_1_0_2(TLSv1_method) \
     REQUIRED_FUNCTION(X509_CRL_free) \
+    REQUIRED_FUNCTION(X509_CRL_get_ext_d2i) \
     REQUIRED_FUNCTION_3_0_X(X509_CRL_it) \
     REQUIRED_FUNCTION_1_1_0(X509_CRL_get0_nextUpdate) \
     REQUIRED_FUNCTION_1_1_0(X509_CRL_get_issuer) \
     REQUIRED_FUNCTION_NOT_3_0_X(X509_CRL_http_nbio) \
     REQUIRED_FUNCTION_3_0_X(OSSL_HTTP_REQ_CTX_nbio_d2i) \
     REQUIRED_FUNCTION_1_1_0(X509_CRL_up_ref) \
+    REQUIRED_FUNCTION(ISSUING_DIST_POINT_free) \
     REQUIRED_FUNCTION(X509_NAME_cmp) \
+    REQUIRED_FUNCTION(X509_NAME_oneline) \
+    REQUIRED_FUNCTION(X509_NAME_print_ex) \
     REQUIRED_FUNCTION_NOT_3_0_X(X509_NAME_hash) \
     REQUIRED_FUNCTION_3_0_X(X509_NAME_hash_ex) \
     REQUIRED_FUNCTION(X509_STORE_CTX_get_current_cert) \
+    REQUIRED_FUNCTION_1_1_0(X509_STORE_CTX_get0_store) \
+    REQUIRED_FUNCTION(X509_STORE_CTX_set_error) \
     REQUIRED_FUNCTION(X509_STORE_add_cert) \
+    REQUIRED_FUNCTION(X509_STORE_add_crl) \
+    REQUIRED_FUNCTION_1_1_0(X509_STORE_get0_objects) \
     REQUIRED_FUNCTION_1_1_0(X509_STORE_get0_param) \
+    REQUIRED_FUNCTION(X509_STORE_get_ex_data) \
+    REQUIRED_FUNCTION(X509_STORE_set_ex_data) \
     REQUIRED_FUNCTION(X509_STORE_set_flags) \
     REQUIRED_FUNCTION_1_1_0(X509_STORE_set_lookup_crls) \
     REQUIRED_FUNCTION_1_0_2(X509_STORE_set_lookup_crls_cb) \
@@ -180,6 +193,8 @@
     REQUIRED_FUNCTION(X509_get_ext_d2i) \
     REQUIRED_FUNCTION(X509_get_issuer_name) \
     REQUIRED_FUNCTION(X509_get_subject_name) \
+    REQUIRED_FUNCTION_1_1_0(X509_OBJECT_get_type) \
+    REQUIRED_FUNCTION_1_1_0(X509_OBJECT_get0_X509) \
     REQUIRED_FUNCTION_1_0_2(sk_free) \
     REQUIRED_FUNCTION_1_0_2(sk_new_null) \
     REQUIRED_FUNCTION_1_0_2(sk_num) \
@@ -239,6 +254,7 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define BIO_set_flags BIO_set_flags_ptr
 #define BIO_write BIO_write_ptr
 #define CRYPTO_free CRYPTO_free_ptr
+#define CRYPTO_get_ex_new_index CRYPTO_get_ex_new_index_ptr
 #define DIST_POINT_free DIST_POINT_free_ptr
 #define ERR_clear_error ERR_clear_error_ptr
 #define ERR_error_string ERR_error_string_ptr
@@ -249,6 +265,8 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define EVP_PKEY_get1_RSA EVP_PKEY_get1_RSA_ptr
 #define GENERAL_NAME_get0_value GENERAL_NAME_get0_value_ptr
 #define SHA256 SHA256_ptr
+#define X509_get_pubkey X509_get_pubkey_ptr
+#define X509_CRL_verify X509_CRL_verify_ptr
 #define PEM_read_bio_PrivateKey PEM_read_bio_PrivateKey_ptr
 #define PEM_read_bio_X509 PEM_read_bio_X509_ptr
 #define PEM_read_bio_X509_AUX PEM_read_bio_X509_AUX_ptr
@@ -275,9 +293,21 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define SSL_set_connect_state SSL_set_connect_state_ptr
 #define SSL_write SSL_write_ptr
 #define X509_CRL_free X509_CRL_free_ptr
+#define X509_CRL_get_ext_d2i X509_CRL_get_ext_d2i_ptr
+#define ISSUING_DIST_POINT_free ISSUING_DIST_POINT_free_ptr
 #define X509_NAME_cmp X509_NAME_cmp_ptr
+#define X509_NAME_oneline X509_NAME_oneline_ptr
+#define X509_NAME_print_ex X509_NAME_print_ex_ptr
 #define X509_STORE_CTX_get_current_cert X509_STORE_CTX_get_current_cert_ptr
+#define X509_STORE_CTX_set_error X509_STORE_CTX_set_error_ptr
 #define X509_STORE_add_cert X509_STORE_add_cert_ptr
+#define X509_STORE_add_crl X509_STORE_add_crl_ptr
+
+#if USE_OPENSSL_1_1_0_OR_UP
+#define X509_STORE_CTX_get0_store X509_STORE_CTX_get0_store_ptr
+#endif
+#define X509_STORE_get_ex_data X509_STORE_get_ex_data_ptr
+#define X509_STORE_set_ex_data X509_STORE_set_ex_data_ptr
 #define X509_STORE_set_flags X509_STORE_set_flags_ptr
 #define X509_VERIFY_PARAM_get_flags X509_VERIFY_PARAM_get_flags_ptr
 #define X509_free X509_free_ptr
@@ -368,7 +398,10 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define X509_CRL_get_issuer X509_CRL_get_issuer_ptr
 #define X509_CRL_up_ref X509_CRL_up_ref_ptr
 #define X509_STORE_get0_param X509_STORE_get0_param_ptr
+#define X509_STORE_get0_objects X509_STORE_get0_objects_ptr
 #define X509_STORE_set_lookup_crls X509_STORE_set_lookup_crls_ptr
+#define X509_OBJECT_get_type X509_OBJECT_get_type_ptr
+#define X509_OBJECT_get0_X509 X509_OBJECT_get0_X509_ptr
 #define d2i_X509_CRL_bio d2i_X509_CRL_bio_ptr
 #define i2d_X509_CRL_bio i2d_X509_CRL_bio_ptr
 
@@ -377,6 +410,7 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #if !USE_OPENSSL_3_0_X
 #define sk_GENERAL_NAME_num(stack) OPENSSL_sk_num((const OPENSSL_STACK*)(1 ? stack : (const STACK_OF(GENERAL_NAME)*)0))
 #define sk_DIST_POINT_num(stack) OPENSSL_sk_num((const OPENSSL_STACK*)(1 ? stack : (const STACK_OF(DIST_POINT)*)0))
+#define sk_X509_CRL_num(stack) OPENSSL_sk_num((const OPENSSL_STACK*)(1 ? stack : (const STACK_OF(X509_CRL)*)0))
 
 #define sk_X509_CRL_new_null() (STACK_OF(X509_CRL)*)OPENSSL_sk_new_null()
 

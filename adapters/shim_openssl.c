@@ -11,6 +11,7 @@
 //      shimmed function X as a symbol are already being replaced by X_ptr.
 
 static void *libssl;
+static void *libcrypto;
 
 // Define all function pointers.
 #define REQUIRED_FUNCTION(fn) __typeof(fn) fn##_ptr;
@@ -25,16 +26,27 @@ int load_libssl()
     static char *soNames[] = {
         "libssl.so.3"
     };
+//    static char *cryptoSoNames[] = {
+//        "libcrypto.so.3"
+//    };
 #elif USE_OPENSSL_1_1_0_OR_UP
     static char *soNames[] = {
         "libssl.so.1.1"
     };
+//    static char *cryptoSoNames[] = {
+//        "libcrypto.so.1.1"
+//    };
 #else
     static char *soNames[] = {
         "libssl.so.1.0.2", // Debian
         "libssl.so.1.0.0", // Ubuntu
         "libssl.so.10" // RedHat
     };
+//    static char *cryptoSoNames[] = {
+//        "libcrypto.so.1.0.2", // Debian
+//        "libcrypto.so.1.0.0", // Ubuntu
+//        "libcrypto.so.10" // RedHat
+//    };
 #endif
 
     if (libssl)
@@ -55,11 +67,26 @@ int load_libssl()
         LogError("libssl could not be loaded\n");
         return 1;
     }
+/*
+    // Load libcrypto for symbols not in libssl (e.g., X509_STORE_*_ex_data, CRYPTO_get_ex_new_index)
+    for (soNameIndex = 0; soNameIndex < COUNT_OF(cryptoSoNames); soNameIndex++)
+    {
+        if (libcrypto = dlopen(cryptoSoNames[soNameIndex], RTLD_LAZY)) {
+            break;
+        }
+    }
 
+    if (!libcrypto) {
+        LogError("libcrypto could not be loaded\n");
+        return 1;
+    }
+*/
 #define REQUIRED_FUNCTION(fn) \
     if (!(fn##_ptr = (__typeof(fn))(dlsym(libssl, #fn)))) { \
-        failures++; \
-        LogError("Cannot get required symbol " #fn " from libssl\n"); \
+        if (!(fn##_ptr = (__typeof(fn))(dlsym(libcrypto, #fn)))) { \
+            failures++; \
+            LogError("Cannot get required symbol " #fn " from libssl or libcrypto\n"); \
+        } \
     }
 
     int failures = 0;

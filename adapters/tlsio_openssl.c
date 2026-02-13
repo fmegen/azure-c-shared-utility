@@ -1086,6 +1086,10 @@ static bool crl_valid(X509_CRL *crl)
 static LOCK_HANDLE crl_cache_lock;
 static int crl_cache_size = 0;
 
+// Global ex_data index for storing continue_on_crl_download_failure flag in X509_STORE
+// The index is global, but each X509_STORE instance stores its own flag value
+static int g_continue_on_crl_failure_idx = -1;
+
 typedef struct {
     X509_CRL *crl;
     char *dp_url;  // distribution point URL this CRL came from
@@ -1707,6 +1711,18 @@ static STACK_OF(X509_CRL) *crls_http_cb(X509_STORE_CTX *ctx, X509_NAME *nm)
         LogInfo("No CRL distribution points defined on non self-issued cert, CRL check may fail.\n");
     }
 
+    if(X509_NAME_cmp(X509_get_issuer_name(x), X509_get_subject_name(x) ) == 0)
+    {
+        LogInfo("Certificate is self-issued, returning empty CRL list.\n");
+        return crls;
+    }
+
+    if (!crldp)
+    {
+        LogInfo("No CRL distribution points found in certificate.\n");
+        return crls;
+    }
+    
     crl = load_crl_crldp(x, "crl", crldp);
     LogInfo("CRL load complete. %x", crl);
     
@@ -1735,17 +1751,60 @@ static STACK_OF(X509_CRL) *crls_http_cb(X509_STORE_CTX *ctx, X509_NAME *nm)
     return crls;
 }
 
-static int allow_CRL_fetch_error(int status, X509_STORE_CTX *ctx)
+static int check_cert_error_cb(int status, X509_STORE_CTX *ctx)
 {
-    if(X509_V_ERR_UNABLE_TO_GET_CRL == X509_STORE_CTX_get_error(ctx))
+   int error = X509_STORE_CTX_get_error(ctx);
+
+    // Only handle CRL-related errors
+    if (error != X509_V_ERR_UNABLE_TO_GET_CRL &&
+        error != X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER)
     {
-        LogInfo("Ignoring CRL Download failure\n");
-        return 1;
+        LogError("Non-CRL error %d, status=%d\n", error, status);
+        return status;  // Not a CRL error, use default behavior
+    }
+
+    // Get the certificate that triggered the error
+    X509 *cert = X509_STORE_CTX_get_current_cert(ctx);
+    if (!cert)
+    {
+        return status;
+    }
+
+    // Check if self-signed (root certificate)
+    if (X509_NAME_cmp(X509_get_subject_name(cert),
+                    X509_get_issuer_name(cert)) == 0)
+    {
+        X509_STORE_CTX_set_error(ctx, X509_V_OK);
+        LogInfo("Self-signed root - ignoring CRL error %d\n", error);
+        return 1;  // Always allow for roots
+    }
+
+    X509_STORE *store = X509_STORE_CTX_get0_store(ctx);
+    if(!store)
+    {
+        LogError("Could not get X509_STORE from context\n");
+        return status;
+    }
+
+    // For non-roots, check the continue_on_crl_download_failure flag
+    // Retrieve the flag we stored during setup
+    int continue_on_failure = 0;
+    if (g_continue_on_crl_failure_idx >= 0)
+    {
+        void *data = X509_STORE_get_ex_data(store, g_continue_on_crl_failure_idx);
+        continue_on_failure = (int)(intptr_t)data;
+    }
+    
+    if (continue_on_failure)
+    {
+        LogInfo("Non-root CRL error %d - ignoring due to continue_on_crl_download_failure flag\n", error);
+        X509_STORE_CTX_set_error(ctx, X509_V_OK);
+        return 1;  // Allow due to configuration flag
     }
     else
     {
-        LogError("Error %d was unexpected\n", X509_STORE_CTX_get_error(ctx));
-        return status;
+        LogError("Non-root CRL error %d - failing verification\n", error);
+        return 0;  // Fail verification as configured
     }
 }
 
@@ -1973,12 +2032,28 @@ static int setup_crl_check(TLS_IO_INSTANCE* tls_io_instance)
     {
         LogInfo("CRL check enabled.\n");
         X509_STORE_set_flags(store, X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL);
+#if USE_OPENSSL_1_1_0_OR_UP
+        X509_STORE_set_lookup_crls(store, crls_http_cb);
+#else
         X509_STORE_set_lookup_crls_cb(store, crls_http_cb);
-        if(tls_io_instance->continue_on_crl_download_failure)
+#endif
+        
+        // Store the continue_on_crl_download_failure flag in this X509_STORE
+        // The ex_data index was allocated during tlsio_openssl_init()
+        if (g_continue_on_crl_failure_idx >= 0)
         {
-            LogInfo("CRL download failures will be ignored.\n");
-            X509_STORE_set_verify_cb(store, allow_CRL_fetch_error);
+            X509_STORE_set_ex_data(store, g_continue_on_crl_failure_idx,
+                                  (void*)(intptr_t)tls_io_instance->continue_on_crl_download_failure);
         }
+        else
+        {
+            LogError("ex_data index not initialized for CRL failure flag\n");
+        }
+        
+        // Always register the verify callback to handle CRL errors intelligently
+        LogInfo("Registering CRL error callback. continue_on_crl_download_failure=%d\n",
+                tls_io_instance->continue_on_crl_download_failure);
+        X509_STORE_set_verify_cb(store, check_cert_error_cb);
     }
 
     return 0;
@@ -2268,6 +2343,20 @@ int tlsio_openssl_init(void)
         return __FAILURE__;
     }
 #endif
+    
+    // Allocate ex_data index for storing continue_on_crl_download_failure flag
+    // This is done once at initialization time in a thread-safe manner
+    // Note: Must be after load_libssl() when using dynamic loading
+    if (g_continue_on_crl_failure_idx < 0)
+    {
+        g_continue_on_crl_failure_idx = X509_STORE_get_ex_new_index(0, NULL, NULL, NULL, NULL);
+        if (g_continue_on_crl_failure_idx < 0)
+        {
+            LogError("Failed to allocate ex_data index for CRL failure flag\n");
+            return __FAILURE__;
+        }
+        LogInfo("Allocated ex_data index %d for CRL failure flag\n", g_continue_on_crl_failure_idx);
+    }
 
 #if !USE_OPENSSL_1_1_0_OR_UP
     // OpenSSL 1.1.0 or up does not require explicit initialization, except if
