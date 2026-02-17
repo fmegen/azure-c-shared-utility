@@ -1607,20 +1607,23 @@ static int save_cert_crl_file(const char *dp_url, const char* suffix, X509_CRL *
     return ret;
 }
 
-static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_POINT) *crldp)
+static int load_crls_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_POINT) *crldp, STACK_OF(X509_CRL) *crls)
 {
-    X509_CRL *crl = NULL;
+    int count = 0;
 
     if (!crldp || sk_DIST_POINT_num(crldp) == 0)
     {
         LogInfo("No CRL distribution points found in certificate.\n");
-        // No distribution points available - cannot fetch or cache CRL
-        return NULL;
+        return 0;
     }
 
-    // Iterate through distribution points - check cache and download per-DP
+    // Iterate through ALL distribution points and collect CRLs from each.
+    // RFC 5280 §6.3.3 requires checking CRLs from all DPs until reasons_mask
+    // covers all reason codes — returning only the first CRL misses revocations
+    // on partitioned CRLs that use onlySomeReasons in the IDP extension.
     for (int i = 0; i < sk_DIST_POINT_num(crldp); i++)
     {
+        X509_CRL *crl = NULL;
         DIST_POINT *dp = sk_DIST_POINT_value(crldp, i);
         const char *urlptr = get_dp_url(dp);
         
@@ -1632,15 +1635,18 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
         // Check memory cache for this specific DP
         if (load_cert_crl_memory(urlptr, &crl) && crl)
         {
-            return crl;
+            sk_X509_CRL_push(crls, crl);
+            count++;
+            continue;
         }
 
         // Check disk cache for this specific DP
         if (load_cert_crl_file(cert, urlptr, suffix, &crl) && crl)
         {
-            // Save to memory cache before returning
             save_cert_crl_memory(urlptr, crl);
-            return crl;
+            sk_X509_CRL_push(crls, crl);
+            count++;
+            continue;
         }
 
         // Download from web
@@ -1668,7 +1674,8 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
                 LogInfo("CRL save complete.");
             }
 
-            return crl;
+            sk_X509_CRL_push(crls, crl);
+            count++;
         }
         else
         {
@@ -1676,8 +1683,16 @@ static X509_CRL *load_crl_crldp(X509 *cert, const char* suffix, STACK_OF(DIST_PO
         }
     }
 
-    LogError("No CRL could be retrieved from any distribution point.");
-    return NULL;
+    if (count == 0)
+    {
+        LogError("No CRL could be retrieved from any distribution point.");
+    }
+    else
+    {
+        LogInfo("Retrieved %d CRL(s) from distribution points.", count);
+    }
+
+    return count;
 }
 
 #if USE_OPENSSL_3_0_X
@@ -1690,7 +1705,6 @@ static STACK_OF(X509_CRL) *crls_http_cb(const X509_STORE_CTX *ctx, const X509_NA
 static STACK_OF(X509_CRL) *crls_http_cb(X509_STORE_CTX *ctx, X509_NAME *nm)
 #endif
 {
-    X509_CRL *crl;
     STACK_OF(DIST_POINT) *crldp;
 
     (void)nm;
@@ -1704,7 +1718,7 @@ static STACK_OF(X509_CRL) *crls_http_cb(X509_STORE_CTX *ctx, X509_NAME *nm)
 
     X509 *x = X509_STORE_CTX_get_current_cert(ctx);
 
-    // try to download Crl
+    // Fetch CRLs from all distribution points
     crldp = X509_get_ext_d2i(x, NID_crl_distribution_points, NULL, NULL);
     if (!crldp && X509_NAME_cmp(X509_get_issuer_name(x), X509_get_subject_name(x)) != 0)
     {
@@ -1722,30 +1736,25 @@ static STACK_OF(X509_CRL) *crls_http_cb(X509_STORE_CTX *ctx, X509_NAME *nm)
         LogInfo("No CRL distribution points found in certificate.\n");
         return crls;
     }
-    
-    crl = load_crl_crldp(x, "crl", crldp);
-    LogInfo("CRL load complete. %x", crl);
-    
+
+    int crl_count = load_crls_crldp(x, "crl", crldp, crls);
+    LogInfo("CRL load complete. count=%d", crl_count);
+
     sk_DIST_POINT_pop_free(crldp, DIST_POINT_free);
-    if (!crl)
+
+    if (crl_count == 0)
     {
-        LogError("Unable to retrieve CRL, CRL check may fail.\n");
+        LogError("Unable to retrieve any CRL, CRL check may fail.\n");
         sk_X509_CRL_free(crls);
         return NULL;
     }
 
-    sk_X509_CRL_push(crls, crl);
-
-    // try to download delta Crl
+    // Fetch delta CRLs from freshestCRL extension
     crldp = X509_get_ext_d2i(x, NID_freshest_crl, NULL, NULL);
-    if (crldp != NULL) {
-        crl = load_crl_crldp(x, "crld", crldp);
-
+    if (crldp != NULL)
+    {
+        load_crls_crldp(x, "crld", crldp, crls);
         sk_DIST_POINT_pop_free(crldp, DIST_POINT_free);
-        if (crl)
-        {
-            sk_X509_CRL_push(crls, crl);
-        }
     }
 
     return crls;
@@ -2031,7 +2040,7 @@ static int setup_crl_check(TLS_IO_INSTANCE* tls_io_instance)
     else
     {
         LogInfo("CRL check enabled.\n");
-        X509_STORE_set_flags(store, X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL);
+        X509_STORE_set_flags(store, X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL | X509_V_FLAG_EXTENDED_CRL_SUPPORT);
 #if USE_OPENSSL_1_1_0_OR_UP
         X509_STORE_set_lookup_crls(store, crls_http_cb);
 #else
