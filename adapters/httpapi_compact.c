@@ -825,7 +825,7 @@ static HTTPAPI_RESULT OpenXIOConnection(HTTP_HANDLE_DATA* http_instance)
             }
             else
             {
-				int countRetry;
+                int countRetry;
                 /*Codes_SRS_HTTPAPI_COMPACT_21_033: [ If the whole process succeed, the HTTPAPI_ExecuteRequest shall retur HTTPAPI_OK. ]*/
                 result = HTTPAPI_OK;
                 /*Codes_SRS_HTTPAPI_COMPACT_21_077: [ The HTTPAPI_ExecuteRequest shall wait, at least, 10 seconds for the SSL open process. ]*/
@@ -930,7 +930,7 @@ static HTTPAPI_RESULT SendHeadsToXIO(HTTP_HANDLE_DATA* http_instance, HTTPAPI_RE
         /*Codes_SRS_HTTPAPI_COMPACT_21_028: [ If the HTTPAPI_ExecuteRequest cannot send the request header, it shall return HTTPAPI_HTTP_HEADERS_FAILED. ]*/
     else if ((result = conn_send_all(http_instance, (const unsigned char*)buf, strlen(buf))) == HTTPAPI_OK)
     {
-		size_t i;
+        size_t i;
         //Send default headers
         /*Codes_SRS_HTTPAPI_COMPACT_21_033: [ If the whole process succeed, the HTTPAPI_ExecuteRequest shall retur HTTPAPI_OK. ]*/
         for (i = 0; ((i < headersCount) && (result == HTTPAPI_OK)); i++)
@@ -1416,7 +1416,7 @@ HTTPAPI_RESULT HTTPAPI_SetOption(HTTP_HANDLE handle, const char* optionName, con
     }
     else if (strcmp(OPTION_TRUSTED_CERT, optionName) == 0)
     {
-		int len;
+        int len;
 
         if (http_instance->certificate)
         {
@@ -1440,7 +1440,7 @@ HTTPAPI_RESULT HTTPAPI_SetOption(HTTP_HANDLE handle, const char* optionName, con
     }
     else if (strcmp(SU_OPTION_X509_CERT, optionName) == 0)
     {
-		int len;
+        int len;
         if (http_instance->x509ClientCertificate)
         {
             free(http_instance->x509ClientCertificate);
@@ -1463,7 +1463,7 @@ HTTPAPI_RESULT HTTPAPI_SetOption(HTTP_HANDLE handle, const char* optionName, con
     }
     else if (strcmp(SU_OPTION_X509_PRIVATE_KEY, optionName) == 0)
     {
-		int len;
+        int len;
         if (http_instance->x509ClientPrivateKey)
         {
             free(http_instance->x509ClientPrivateKey);

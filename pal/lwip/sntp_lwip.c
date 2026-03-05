@@ -26,32 +26,32 @@
 //
 int SNTP_SetServerName(const char* serverName)
 {
-	// Future implementations could easily allow multiple calls to SNTP_SetServerName
-	// by incrementing the index supplied to sntp_setservername
-	sntp_setservername(0, (char*)serverName);
-	return 0;
+    // Future implementations could easily allow multiple calls to SNTP_SetServerName
+    // by incrementing the index supplied to sntp_setservername
+    sntp_setservername(0, (char*)serverName);
+    return 0;
 }
 
 /*Codes_SRS_SNTP_LWIP_30_004: [ SNTP_Init shall initialize the SNTP client, contact the NTP server to set system time, then return 0 to indicate success (lwIP has no failure path). ]*/
 int SNTP_Init()
 {
-	LogInfo("Initializing SNTP");
-	sntp_setoperatingmode(SNTP_OPMODE_POLL);
-	sntp_init();
-	time_t ts = 0;
-	// Before 1980 is uninitialized
-	while (ts < 10 * 365 * 24 * 3600)
-	{
-		ThreadAPI_Sleep(1000);
-		ts = get_time(NULL);
+    LogInfo("Initializing SNTP");
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_init();
+    time_t ts = 0;
+    // Before 1980 is uninitialized
+    while (ts < 10 * 365 * 24 * 3600)
+    {
+        ThreadAPI_Sleep(1000);
+        ts = get_time(NULL);
 
-	}
-	LogInfo("SNTP initialization complete");
-	return 0;
+    }
+    LogInfo("SNTP initialization complete");
+    return 0;
 }
 
 /*Codes_SRS_SNTP_LWIP_30_005: [ SNTP_Denit shall deinitialize the SNTP client. ]*/
 void SNTP_Deinit()
 {
-	sntp_stop();
+    sntp_stop();
 }

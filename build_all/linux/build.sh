@@ -36,7 +36,7 @@ process_args ()
         extracloptions="$arg $extracloptions"
         save_next_arg=0
       elif [ $save_next_arg == 2 ]
-	  then
+      then
         build_root="$arg"
         save_next_arg=0
       else
@@ -73,12 +73,12 @@ fi
 
 if [[ $run_valgrind == 1 ]] ;
 then
-	#use doctored openssl
-	export LD_LIBRARY_PATH=/usr/local/ssl/lib
-	ctest -j $CORES --output-on-failure
-	export LD_LIBRARY_PATH=
+    #use doctored openssl
+    export LD_LIBRARY_PATH=/usr/local/ssl/lib
+    ctest -j $CORES --output-on-failure
+    export LD_LIBRARY_PATH=
 else
-	ctest -j $CORES -C "Debug" --output-on-failure
+    ctest -j $CORES -C "Debug" --output-on-failure
 fi
 
 popd

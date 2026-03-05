@@ -12,7 +12,7 @@ ${theseTestsName}.c
 )
 
 set(${theseTestsName}_c_files
-	${TICKCOUTER_C_FILE}
+    ${TICKCOUTER_C_FILE}
 )
 
 if(UNIX) # linux & apple

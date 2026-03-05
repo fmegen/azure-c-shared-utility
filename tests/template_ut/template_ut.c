@@ -14,17 +14,17 @@
  */
 void* my_gballoc_malloc(size_t size)
 {
-	return malloc(size);
+    return malloc(size);
 }
 
 void* my_gballoc_realloc(void* ptr, size_t size)
 {
-	return realloc(ptr, size);
+    return realloc(ptr, size);
 }
 
 void my_gballoc_free(void* ptr)
 {
-	free(ptr);
+    free(ptr);
 }
 
 /**
@@ -160,7 +160,7 @@ BEGIN_TEST_SUITE(template_ut)
         (void)umock_c_init(on_umock_c_error);
 
         result = umocktypes_charptr_register_types();
-		ASSERT_ARE_EQUAL(int, 0, result);
+        ASSERT_ARE_EQUAL(int, 0, result);
 
         /**
          * It is necessary to identify the types defined on your target. With it, the test system will 
@@ -174,7 +174,7 @@ BEGIN_TEST_SUITE(template_ut)
          * It is necessary to replace all mockable functions by the mock functions that you created here.
          * It will tell the test suite to call my_callee_open besides to call the real callee_open.
          */
-		REGISTER_GLOBAL_MOCK_HOOK(callee_open, my_callee_open);
+        REGISTER_GLOBAL_MOCK_HOOK(callee_open, my_callee_open);
         REGISTER_GLOBAL_MOCK_HOOK(callee_close, my_callee_close);
 
         /**
@@ -322,7 +322,7 @@ BEGIN_TEST_SUITE(template_ut)
     {
         ///arrange
         TARGET_RESULT result;
-		size_t i;
+        size_t i;
         int negativeTestsInitResult = umock_c_negative_tests_init();
         ASSERT_ARE_EQUAL(int, 0, negativeTestsInitResult);
 
@@ -380,7 +380,7 @@ BEGIN_TEST_SUITE(template_ut)
         TARGET_RESULT result;
         int negativeTestsInitResult = umock_c_negative_tests_init();
         bool runTest[] = { true, false, true };
-		size_t i;
+        size_t i;
 
         ASSERT_ARE_EQUAL(int, 0, negativeTestsInitResult);
 
@@ -429,7 +429,7 @@ BEGIN_TEST_SUITE(template_ut)
     {
         ///arrange
         TARGET_RESULT result;
-		size_t i;
+        size_t i;
         int negativeTestsInitResult = umock_c_negative_tests_init();
         ASSERT_ARE_EQUAL(int, 0, negativeTestsInitResult);
 

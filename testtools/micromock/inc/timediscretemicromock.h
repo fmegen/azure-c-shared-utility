@@ -18,9 +18,9 @@ typedef CTimeDiscreteMicroMock<Typed_##className> className; \
 TYPED_MOCK_CLASS(Typed_##className, CThreadSafeGlobalMock)
 
 // A strict expected call implies that all arguments are checked
-#define STRICT_EXPECTED_CALL_AT(ClassName, time, ...)						\
+#define STRICT_EXPECTED_CALL_AT(ClassName, time, ...)                        \
     STRICT_EXPECTED_CALL(ClassName, __VA_ARGS__)                            \
-    .AddExtraCallArgument(new CMockCallArgument<UINT32>(time, false))				
+    .AddExtraCallArgument(new CMockCallArgument<UINT32>(time, false))                
 
    
 
@@ -32,7 +32,7 @@ STRICT_EXPECTED_CALL_AT(ClassName, time, __VA_ARGS__)        \
     .IgnoreAllArguments()
 
 /*this macro takes a mock name, looks it up in the repository, and gets the time provider for that mock*/
-#define MOCK_TIMEPROVIDER(mockName)																									\
+#define MOCK_TIMEPROVIDER(mockName)                                                                                                    \
     (dynamic_cast<CTimeDiscreteMicroMockBase*>(GetSingleton())->getCurrentTick())
 
 
@@ -385,9 +385,9 @@ class stims_base
 private:
     static std::vector<canPlay *> allPlayers;
 
-    static void registerCallXArg(canPlay* someStim)								
-    {																													
-        allPlayers.push_back(someStim);																					
+    static void registerCallXArg(canPlay* someStim)                                
+    {                                                                                                                    
+        allPlayers.push_back(someStim);                                                                                    
     }
 
 public:

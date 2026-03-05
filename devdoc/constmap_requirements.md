@@ -1,4 +1,4 @@
-﻿ConstMap Requirements
+ConstMap Requirements
 ================
 
 

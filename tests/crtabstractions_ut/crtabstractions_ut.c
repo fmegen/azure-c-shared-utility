@@ -285,7 +285,7 @@ TEST_SUITE_CLEANUP(b)
         TEST_FUNCTION(strcat_s_With_Unterminated_Destination_Fails)
         {
             // arrange
-			size_t i;
+            size_t i;
             char dstString[128];
             size_t dstSizeInBytes = sizeof(dstString);
             char srcString[] = "Source";
@@ -2103,7 +2103,7 @@ TEST_SUITE_CLEANUP(b)
             const char* subjectStr = "2.225073858507201e-308";
             char* endptr;
             long double result;
-			long double significant;
+            long double significant;
 
             long double maxExpectedSignificant = 2.225073858507202;
             long double minExpectedSignificant = 2.225073858507200;
@@ -2127,7 +2127,7 @@ TEST_SUITE_CLEANUP(b)
             const char* subjectStr = "1.797693134862315e+308";
             char* endptr;
             long double result;
-			long double significant;
+            long double significant;
 
             long double maxExpectedSignificant = 1.797693134862316;
             long double minExpectedSignificant = 1.797693134862314;
@@ -2151,7 +2151,7 @@ TEST_SUITE_CLEANUP(b)
             const char* subjectStr = "-1.797693134862315e+308";
             char* endptr;
             long double result;
-			long double significant;
+            long double significant;
 
             long double maxExpectedSignificant = -1.797693134862314;
             long double minExpectedSignificant = -1.797693134862316;
@@ -2466,7 +2466,7 @@ TEST_SUITE_CLEANUP(b)
             while (toBeConverted <= (UINT_MAX / 10))
             {
                 ///arrange
-				int result;
+                int result;
                 destinationSize++;
                 toBeConverted *= 10;
 
@@ -2543,7 +2543,7 @@ TEST_SUITE_CLEANUP(b)
             while (toBeConverted <= (UINT_MAX / 10))
             {
                 ///arrange
-				int result;
+                int result;
                 unsigned int valueFromString = 0;
                 size_t pos = 0;
                 destinationSize++;
@@ -2614,7 +2614,7 @@ TEST_SUITE_CLEANUP(b)
             while (toBeConverted <= (UINT_MAX / 10))
             {
                 ///arrange
-				int result;
+                int result;
                 destinationSize++;
                 toBeConverted *= 10;
 
@@ -2691,7 +2691,7 @@ TEST_SUITE_CLEANUP(b)
             while (toBeConverted <= (SIZE_MAX / 10))
             {
                 ///arrange
-				int result;
+                int result;
                 size_t valueFromString = 0;
                 size_t pos = 0;
                 destinationSize++;

@@ -12,10 +12,10 @@ ${theseTestsName}.c
 )
 
 set(${theseTestsName}_c_files
-	../../pal/tlsio_options.c
-	../../src/optionhandler.c
-	../../src/crt_abstractions.c
-	../../src/vector.c
+    ../../pal/tlsio_options.c
+    ../../src/optionhandler.c
+    ../../src/crt_abstractions.c
+    ../../src/vector.c
 )
 
 set(${theseTestsName}_h_files

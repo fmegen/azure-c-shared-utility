@@ -136,7 +136,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_create_succeed)
     {
         ///arrange
-		STRING_TOKENIZER_HANDLE t;
+        STRING_TOKENIZER_HANDLE t;
         const char* inputString = "Pirlimpimpim";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -181,7 +181,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     {
         ///arrange
         const char* inputString = "Pirlimpimpim";
-		STRING_TOKENIZER_HANDLE t;
+        STRING_TOKENIZER_HANDLE t;
 
         umock_c_reset_all_calls();
 
@@ -207,7 +207,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     {
         ///arrange
         const char* inputString = "Pirlimpimpim";
-		STRING_TOKENIZER_HANDLE t;
+        STRING_TOKENIZER_HANDLE t;
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
 
@@ -234,7 +234,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_handle_NULL_Fail)
     {
         ///arrange
-		int r;
+        int r;
         STRING_HANDLE output_string_handle = STRING_new();
 
         umock_c_reset_all_calls();
@@ -253,7 +253,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_Delimiter_empty_Fail)
     {
         ///arrange
-		int r;
+        int r;
         STRING_HANDLE output_string_handle = STRING_new();
 
         umock_c_reset_all_calls();
@@ -273,7 +273,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_output_NULL_Fail)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "Pirlimpimpim";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -297,7 +297,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_delimiters_NULL_Fail)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "Pirlimpimpim";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -322,7 +322,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_PIRLI_Succeed)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "Pirlimpimpim";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -353,7 +353,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_Start_With_Delimiter_Succeed)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "Pirlimpimpim";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -385,7 +385,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_Start_And_End_With_Delimiter_Succeed)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "PirlimP";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -416,7 +416,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_with_All_token_String_Fail)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "PPPPPP";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -442,7 +442,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_2Times_With_Just_1Token_SecondCall_Fail)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "TestP";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -480,7 +480,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_2charactersToken_at_begin_of_input_call_1_Time_Succeed)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "??This is a Test";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -512,7 +512,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_stringWith3Tokens_Call3Times_Succeed)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "Test1PTest2PTest3";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -563,7 +563,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_inputEmptyString_Fail)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -590,7 +590,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_multipleCalls_DifferentToken_Succeed)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "?a???b,,,#c";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -652,7 +652,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_inputString_with_SingleCharacter_call2Times_succeed)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "c";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -691,7 +691,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_inputString_with_NULL_in_the_Middle_succeed)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "This is a Test \0 1234";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);
@@ -725,7 +725,7 @@ BEGIN_TEST_SUITE(string_tokenizer_unittests)
     TEST_FUNCTION(STRING_TOKENIZER_get_next_token_inputString_with_specialCharacters_succeed)
     {
         ///arrange
-		int r;
+        int r;
         const char* inputString = "This is a Test \r\n 1234 \r\n\t 12345";
 
         STRING_HANDLE input_string_handle = STRING_construct(inputString);

@@ -14,9 +14,9 @@ threadapi_freertos implements a wrapper function for the FreeRTOS `vTaskDelay` f
 **SRS_THREADAPI_FREERTOS_30_001: [** The threadapi_freertos shall implement the method `ThreadAPI_Sleep` defined in `threadapi.h`.
 ```c
 /**
- * @brief	Sleeps the current thread for the given number of milliseconds.
+ * @brief    Sleeps the current thread for the given number of milliseconds.
  *
- * @param	milliseconds	The number of milliseconds to sleep.
+ * @param    milliseconds    The number of milliseconds to sleep.
  */
 void ThreadAPI_Sleep(unsigned int milliseconds);
 ```

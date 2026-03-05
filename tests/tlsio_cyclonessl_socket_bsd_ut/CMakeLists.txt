@@ -7,11 +7,11 @@ compileAsC11()
 set(theseTestsName tlsio_cyclonessl_socket_bsd_ut)
 
 set(${theseTestsName}_test_files
-	${theseTestsName}.c
+    ${theseTestsName}.c
 )
 
 set(${theseTestsName}_c_files
-	../../src/tlsio_cyclonessl_socket_bsd.c
+    ../../src/tlsio_cyclonessl_socket_bsd.c
 )
 
 set(${theseTestsName}_h_files

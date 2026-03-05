@@ -438,11 +438,11 @@ XX**SRS_UWS_CLIENT_01_496: [** If the close was initiated by the peer no `on_ws_
    In the following text, we will use terms from Section 3, such as "/host/" and "/secure/ flag" as defined in that section.
 
    1.  **SRS_UWS_CLIENT_01_066: [** The components of the WebSocket URI passed into this algorithm (/host/, /port/, /resource name/, and /secure/ flag) MUST be valid according to the specification of WebSocket URIs specified in Section 3. **]**  
-   	   **SRS_UWS_CLIENT_01_067: [** If any of the components are invalid, the client MUST _Fail the WebSocket Connection_ and abort these steps. **]**  
+          **SRS_UWS_CLIENT_01_067: [** If any of the components are invalid, the client MUST _Fail the WebSocket Connection_ and abort these steps. **]**  
 
    2.  If the client already has a WebSocket connection to the remote host (IP address) identified by /host/ and port /port/ pair, even if the remote host is known by another name, the client MUST wait until that connection has been established or for that connection to have failed.
        There MUST be no more than one connection in a CONNECTING state.
-	   If multiple connections to the same IP address are attempted simultaneously, the client MUST serialize them so that there is no more than one connection at a time running through the following steps.
+       If multiple connections to the same IP address are attempted simultaneously, the client MUST serialize them so that there is no more than one connection at a time running through the following steps.
 
        If the client cannot determine the IP address of the remote host (for example, because all communication is being done through a proxy server that performs DNS queries itself), then the client MUST assume for the purposes of this step that each host name refers to a distinct remote host, and instead the client SHOULD limit the total number of simultaneous pending connections to a reasonably low number (e.g., the client might allow simultaneous pending connections to a.example.com and b.example.com, but if thirty simultaneous connections to a single host are requested, that may not be allowed).
        For example, in a web browser context, the client needs to consider the number of tabs the user has open in setting a limit to the number of simultaneous pending connections.

@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 2.8.11)
 
 if(NOT ${use_http})
-	message(FATAL_ERROR "httpapiex_ut being generated without HTTP support")
+    message(FATAL_ERROR "httpapiex_ut being generated without HTTP support")
 endif()
 
 compileAsC11()

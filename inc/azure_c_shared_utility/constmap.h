@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 /** @file       constmap.h
-*	@brief		ConstMap is a module that implements a read-only dictionary
+*    @brief        ConstMap is a module that implements a read-only dictionary
 *           of @c const char* keys to @c const char* values.
 */
 
@@ -71,28 +71,28 @@ MOCKABLE_FUNCTION(, MAP_HANDLE, ConstMap_CloneWriteable, CONSTMAP_HANDLE, handle
 
 /**
  * @brief   This function returns a true if the map contains a key 
- *			with the same value the parameter @p key.
+ *            with the same value the parameter @p key.
  *
  * @param   handle      The handle to an existing map.
  * @param   key         The key that the caller wants checked.
  *
- * @return				The function returns @c true if the key exists 
- *						in the map and @c false if key is not found or 
- *						parameters are invalid.
+ * @return                The function returns @c true if the key exists 
+ *                        in the map and @c false if key is not found or 
+ *                        parameters are invalid.
  */
 MOCKABLE_FUNCTION(, bool, ConstMap_ContainsKey, CONSTMAP_HANDLE, handle, const char*, key);
 
 /**
  * @brief   This function returns @c true if at least one <key,value> pair 
- *			exists in the map where the entry's value is equal to the 
- *			parameter @c value.
+ *            exists in the map where the entry's value is equal to the 
+ *            parameter @c value.
  *
  * @param   handle          The handle to an existing map.
  * @param   value           The value that the caller wants checked.
  *
- * @return					The function returns @c true if the value exists 
- *							in the map and @c false if value is not found or 
- *							parameters are invalid.
+ * @return                    The function returns @c true if the value exists 
+ *                            in the map and @c false if value is not found or 
+ *                            parameters are invalid.
  */
 MOCKABLE_FUNCTION(, bool, ConstMap_ContainsValue, CONSTMAP_HANDLE, handle, const char*, value);
 

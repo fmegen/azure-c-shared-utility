@@ -39,7 +39,7 @@ typedef bool _Bool;
 #endif // __cplusplus
 #else // _WIN32_WCE
 /* WINCE does not support bool as C datatype */
-#define __bool_true_false_are_defined	1
+#define __bool_true_false_are_defined    1
 
 #define HAS_STDBOOL
 

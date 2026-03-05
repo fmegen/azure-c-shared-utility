@@ -20,8 +20,8 @@ target_link_libraries(tlsio_connect
 )
 
 if(${use_openssl} AND WIN32)
-	file(COPY ${SSL_DLL} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-	file(COPY ${CRYPTO_DLL} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    file(COPY ${SSL_DLL} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    file(COPY ${CRYPTO_DLL} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
 set_target_properties(tlsio_connect

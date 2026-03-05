@@ -9,12 +9,12 @@ set(theseTestsName tlsio_cyclonessl_ut)
 include_directories(${SHARED_UTIL_REAL_TEST_FOLDER})
 
 set(${theseTestsName}_test_files
-	${theseTestsName}.c
+    ${theseTestsName}.c
 )
 
 set(${theseTestsName}_c_files
-	../../src/tlsio_cyclonessl.c
-	../real_test_files/real_crt_abstractions.c
+    ../../src/tlsio_cyclonessl.c
+    ../real_test_files/real_crt_abstractions.c
 )
 
 #CycloneSSL has a pretty big list of warnings which need to be ignored

@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 /** @file       map.h
-*	@brief		Map is a module that implements a dictionary of @c STRING_HANDLE
+*    @brief        Map is a module that implements a dictionary of @c STRING_HANDLE
 *               keys to @c STRING_HANDLE values.
 */
 

@@ -51,9 +51,9 @@ shift
 if "%1" equ "" call :usage && exit /b 1
 set build-platform=%1
 if %build-platform% == x64 (
-	set CMAKE_DIR=shared-util_x64
+    set CMAKE_DIR=shared-util_x64
 ) else if %build-platform% == arm (
-	set CMAKE_DIR=shared-util_arm
+    set CMAKE_DIR=shared-util_arm
 )
 goto args-continue
 
@@ -98,72 +98,72 @@ rem no error checking
 pushd %build-root%\cmake\%CMAKE_DIR%
 
 if %MAKE_NUGET_PKG% == yes (
-	echo ***Running CMAKE for Win32 ***
-	cmake %build-root%
-	if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
-	popd
+    echo ***Running CMAKE for Win32 ***
+    cmake %build-root%
+    if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+    popd
 
-	echo *** Running CMAKE x64 ***
-	if EXIST %build-root%\cmake\shared-util_x64 (
-		rmdir /s/q %build-root%\cmake\shared-util_x64
-	)
+    echo *** Running CMAKE x64 ***
+    if EXIST %build-root%\cmake\shared-util_x64 (
+        rmdir /s/q %build-root%\cmake\shared-util_x64
+    )
 
-	mkdir %build-root%\cmake\shared-util_x64
-	pushd %build-root%\cmake\shared-util_x64
-	cmake %build-root% -G "Visual Studio 14 Win64"
-	if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
-	popd
+    mkdir %build-root%\cmake\shared-util_x64
+    pushd %build-root%\cmake\shared-util_x64
+    cmake %build-root% -G "Visual Studio 14 Win64"
+    if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+    popd
 
-	echo *** Running CMAKE ARM ***
-	if EXIST %build-root%\cmake\shared-util_arm (
-		rmdir /s/q %build-root%\cmake\shared-util_arm
-	)
-	mkdir %build-root%\cmake\shared-util_arm
-	pushd %build-root%\cmake\shared-util_arm
-	cmake %build-root% -G "Visual Studio 14 ARM"
-	if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+    echo *** Running CMAKE ARM ***
+    if EXIST %build-root%\cmake\shared-util_arm (
+        rmdir /s/q %build-root%\cmake\shared-util_arm
+    )
+    mkdir %build-root%\cmake\shared-util_arm
+    pushd %build-root%\cmake\shared-util_arm
+    cmake %build-root% -G "Visual Studio 14 ARM"
+    if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 ) else if %build-platform% == Win32 (
-	echo ***Running CMAKE for Win32***
-	cmake %build-root% -Drun_unittests:bool=ON -Duse_wsio:bool=ON
-	if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+    echo ***Running CMAKE for Win32***
+    cmake %build-root% -Drun_unittests:bool=ON -Duse_wsio:bool=ON
+    if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 ) else if %build-platform% == ARM (
-	echo ***Running CMAKE for ARM***
-	cmake %build-root% -G "Visual Studio 14 ARM" -Drun_unittests:bool=ON
-	if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+    echo ***Running CMAKE for ARM***
+    cmake %build-root% -G "Visual Studio 14 ARM" -Drun_unittests:bool=ON
+    if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 ) else (
-	echo ***Running CMAKE for Win64***
-	cmake %build-root% -G "Visual Studio 14 Win64" -Drun_unittests:bool=ON
-	if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+    echo ***Running CMAKE for Win64***
+    cmake %build-root% -G "Visual Studio 14 Win64" -Drun_unittests:bool=ON
+    if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 )
 
 if %MAKE_NUGET_PKG% == yes (
-		echo running Win32 Shared Util
-		echo ***Building all configurations***
-		msbuild /m %build-root%\cmake\shared-util_Win32\%SOLUTION_NAME%.sln /p:Configuration=Release
-		msbuild /m %build-root%\cmake\shared-util_Win32\%SOLUTION_NAME%.sln /p:Configuration=Debug
-		if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+        echo running Win32 Shared Util
+        echo ***Building all configurations***
+        msbuild /m %build-root%\cmake\shared-util_Win32\%SOLUTION_NAME%.sln /p:Configuration=Release
+        msbuild /m %build-root%\cmake\shared-util_Win32\%SOLUTION_NAME%.sln /p:Configuration=Debug
+        if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 
-		msbuild /m %build-root%\cmake\shared-util_x64\%SOLUTION_NAME%.sln /p:Configuration=Release
-		msbuild /m %build-root%\cmake\shared-util_x64\%SOLUTION_NAME%.sln /p:Configuration=Debug
-		if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+        msbuild /m %build-root%\cmake\shared-util_x64\%SOLUTION_NAME%.sln /p:Configuration=Release
+        msbuild /m %build-root%\cmake\shared-util_x64\%SOLUTION_NAME%.sln /p:Configuration=Debug
+        if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 
-		msbuild /m %build-root%\cmake\shared-util_arm\%SOLUTION_NAME%.sln /p:Configuration=Release
-		msbuild /m %build-root%\cmake\shared-util_arm\%SOLUTION_NAME%.sln /p:Configuration=Debug
-		if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+        msbuild /m %build-root%\cmake\shared-util_arm\%SOLUTION_NAME%.sln /p:Configuration=Release
+        msbuild /m %build-root%\cmake\shared-util_arm\%SOLUTION_NAME%.sln /p:Configuration=Debug
+        if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 ) else (
-	if not defined build-config (
-		echo ***Building both configurations***
-		msbuild /m %SOLUTION_NAME%.sln /p:Configuration=Release
-		msbuild /m %SOLUTION_NAME%.sln /p:Configuration=Debug
-		if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
-	) else (
-		echo ***Building %build-config% only***
-		msbuild /m %SOLUTION_NAME%.sln /p:Configuration=%build-config%
-		if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
-	)
+    if not defined build-config (
+        echo ***Building both configurations***
+        msbuild /m %SOLUTION_NAME%.sln /p:Configuration=Release
+        msbuild /m %SOLUTION_NAME%.sln /p:Configuration=Debug
+        if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+    ) else (
+        echo ***Building %build-config% only***
+        msbuild /m %SOLUTION_NAME%.sln /p:Configuration=%build-config%
+        if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+    )
 
-	ctest -C "debug" -V
-	if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+    ctest -C "debug" -V
+    if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 )
 
 popd

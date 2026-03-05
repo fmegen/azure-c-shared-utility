@@ -201,7 +201,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_Alloc_happy_path_succeeds)
         {
             ///arrange
-			HTTP_HEADERS_HANDLE handle;
+            HTTP_HEADERS_HANDLE handle;
             STRICT_EXPECTED_CALL(gballoc_malloc(IGNORED_NUM_ARG))
                 .IgnoreArgument(1);
 
@@ -223,7 +223,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_Alloc_fails_when_malloc_fails)
         {
             ///arrange
-			HTTP_HEADERS_HANDLE httpHandle;
+            HTTP_HEADERS_HANDLE httpHandle;
             whenShallmalloc_fail = currentmalloc_call + 1;
             STRICT_EXPECTED_CALL(gballoc_malloc(IGNORED_NUM_ARG))
                 .IgnoreArgument(1);
@@ -273,7 +273,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_Alloc_fails_when_Map_Create_fails)
         {
             ///arrange
-			HTTP_HEADERS_HANDLE httpHandle;
+            HTTP_HEADERS_HANDLE httpHandle;
             STRICT_EXPECTED_CALL(gballoc_malloc(IGNORED_NUM_ARG))
                 .IgnoreArgument(1);
             STRICT_EXPECTED_CALL(Map_Create(IGNORED_PTR_ARG))
@@ -294,7 +294,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_Alloc_succeeds_and_GetHeaderCount_returns_0)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             size_t nHeaders;
             size_t zero = 0;
@@ -321,7 +321,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_AddHeaderNameValuePair_happy_path_succeeds)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 
@@ -349,7 +349,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_AddHeaderNameValuePair_fails_when_Map_AddOrUpdate_fails)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 
@@ -379,7 +379,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_AddHeaderNameValuePair_succeeds)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 
@@ -422,7 +422,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_AddHeaderNameValuePair_with_NULL_name_fails)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 
@@ -441,7 +441,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_AddHeaderNameValuePair_with_NULL_value_fails)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 
@@ -460,7 +460,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_AddHeaderNameValuePair_with_same_Name_appends_to_existing_value_succeeds)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, NAME1))
                 .IgnoreArgument(1)
@@ -496,7 +496,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_AddHeaderNameValuePair_with_same_Name_appends_fails_when_Map_AddOrUpdate_fails)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, NAME1))
                 .IgnoreArgument(1)
@@ -533,7 +533,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_AddHeaderNameValuePair_with_same_Name_fails_when_gballoc_fails)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, NAME1))
                 .IgnoreArgument(1)
@@ -564,7 +564,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_AddHeaderNameValuePair_add_two_headers_produces_two_headers)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, NAME1))
                 .IgnoreArgument(1)
@@ -594,7 +594,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_When_Second_Added_Header_Is_A_Substring_Of_An_Existing_Header_2_Headers_Are_Added)
         {
             ///arrange
-			HTTP_HEADERS_RESULT result;
+            HTTP_HEADERS_RESULT result;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, "ab"))
                 .IgnoreArgument(1)
@@ -637,7 +637,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_FindHeaderValue_with_NULL_name_returns_NULL)
         {
             ///arrange
-			const char* res;
+            const char* res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 
@@ -657,7 +657,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_FindHeaderValue_retrieves_previously_stored_value_succeeds)
         {
             ///arrange
-			const char* res1;
+            const char* res1;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, NAME1))
                 .IgnoreArgument(1)
@@ -684,8 +684,8 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_FindHeaderValue_retrieves_previously_stored_value_for_two_headers_succeeds)
         {
             ///arrange
-			const char* res1;
-			const char* res2;
+            const char* res1;
+            const char* res2;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, NAME1))
                 .IgnoreArgument(1)
@@ -721,7 +721,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         /*Tests_SRS_HTTP_HEADERS_99_021:[ In this case the return value shall point to a string that shall strcmp equal to the original stored string.]*/
         TEST_FUNCTION(HTTPHeaders_FindHeaderValue_retrieves_concatenation_of_previously_stored_values_for_header_name_succeeds)
         {
-			const char* res;
+            const char* res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, NAME1))
                 .IgnoreArgument(1)
@@ -753,7 +753,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_FindHeaderValue_returns_NULL_for_nonexistent_value)
         {
             ///arrange
-			const char* res2;
+            const char* res2;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, NAME1))
                 .IgnoreArgument(1)
@@ -781,9 +781,9 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_FindHeaderValue_with_nonexistent_header_succeeds)
         {
             ///arrange
-			const char* res1;
-			const char* res2;
-			const char* res3;
+            const char* res1;
+            const char* res2;
+            const char* res3;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, NAME1))
                 .IgnoreArgument(1)
@@ -820,7 +820,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_ReplaceHeaderNameValuePair_succeeds)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, NAME1))
                 .IgnoreArgument(1)
@@ -850,7 +850,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_ReplaceHeaderNameValuePair_for_none_existing_header_succeeds)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 
@@ -876,7 +876,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_GetHeaderCount_with_NULL_handle_fails)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res1;
+            HTTP_HEADERS_RESULT res1;
             size_t nHeaders;
 
             ///act
@@ -891,7 +891,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_GetHeaderCount_with_NULL_headersCount_fails)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res1;
+            HTTP_HEADERS_RESULT res1;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 
@@ -919,7 +919,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
             const char* const ** pKeys = (const char* const **)&keys; 
             const char* const ** pValues = (const char* const **)&values;
             const size_t one = 1;
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, NAME1))
                 .IgnoreArgument(1)
                 .SetReturn((const char*)NULL); /*this key does not exist, the line below is adding it*/
@@ -949,7 +949,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_GetHeaderCount_fails_when_Map_GetInternals_fails)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             size_t nHeaders;
             umock_c_reset_all_calls();
@@ -975,7 +975,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_GetHeaderCount_with_2_header_produces_2)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             size_t nHeaders;
             const char* keys[2] = { "NAME1", "NAME2" };
@@ -1031,7 +1031,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_GetHeader_with_NULL_buffer_fails)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, NAME1))
                 .IgnoreArgument(1)
@@ -1055,7 +1055,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_GetHeader_with_index_too_big_fails_1)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res1;
+            HTTP_HEADERS_RESULT res1;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             char* headerValue;
             const char* thisIsNULL = NULL;
@@ -1084,7 +1084,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_GetHeader_with_index_too_big_fails_2)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res1;
+            HTTP_HEADERS_RESULT res1;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             const char* keys[1] = { "NAME1" };
             const char* values[1] = { "VALUE1" };
@@ -1120,7 +1120,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_GetHeader_succeeds_1)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res1;
+            HTTP_HEADERS_RESULT res1;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             char* headerValue;
             const char* keys[1] = { "a" };
@@ -1167,7 +1167,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
             const char* values[1] = { "b" };
             const char** pValues = &values[0];
             const size_t one = 1;
-			HTTP_HEADERS_RESULT res1;
+            HTTP_HEADERS_RESULT res1;
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, "a"))
                 .IgnoreArgument(1)
                 .SetReturn((const char*)NULL); /*this key does not exist, the line below is adding it*/
@@ -1203,7 +1203,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
             const char* values[1] = { "b" };
             const char** pValues = &values[0];
             const size_t one = 1;
-			HTTP_HEADERS_RESULT res1;
+            HTTP_HEADERS_RESULT res1;
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, "a"))
                 .IgnoreArgument(1)
                 .SetReturn((const char*)NULL); /*this key does not exist, the line below is adding it*/
@@ -1236,7 +1236,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_AddHeaderNameValuePair_with_colon_in_name_fails)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 
@@ -1262,7 +1262,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
             const size_t one = 1;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             char* headerValue;
-			HTTP_HEADERS_RESULT res1;
+            HTTP_HEADERS_RESULT res1;
             STRICT_EXPECTED_CALL(Map_GetValueFromKey(IGNORED_PTR_ARG, "a"))
                 .IgnoreArgument(1)
                 .SetReturn((const char*)NULL); /*this key does not exist, the line below is adding it*/
@@ -1298,7 +1298,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
             ///arrange
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             char unacceptableString[2]={'\0', '\0'};
-			int c;
+            int c;
             
             for(c=SCHAR_MIN;c <=SCHAR_MAX; c++)
             {
@@ -1306,7 +1306,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
 
                 if((c<33) ||( 126<c)|| (c==':'))
                 {
-					HTTP_HEADERS_RESULT res;
+                    HTTP_HEADERS_RESULT res;
 
                     /*so it is an unacceptable character*/
                     unacceptableString[0]=(char)c;
@@ -1327,7 +1327,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHeaders_AddHeaderNameValuePair_with_LWS_value_stores_without_LWS_characters_succeeds)
         {
             ///arrange
-			HTTP_HEADERS_RESULT res;
+            HTTP_HEADERS_RESULT res;
             HTTP_HEADERS_HANDLE httpHandle = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 
@@ -1368,7 +1368,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHEADERS_Clone_happy_path)
         {
             ///arrange
-			HTTP_HEADERS_HANDLE result;
+            HTTP_HEADERS_HANDLE result;
             HTTP_HEADERS_HANDLE source = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 
@@ -1393,7 +1393,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHEADERS_Clone_fails_when_map_clone_fails)
         {
             ///arrange
-			HTTP_HEADERS_HANDLE result;
+            HTTP_HEADERS_HANDLE result;
             HTTP_HEADERS_HANDLE source = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 
@@ -1421,7 +1421,7 @@ BEGIN_TEST_SUITE(HTTPHeaders_UnitTests)
         TEST_FUNCTION(HTTPHEADERS_Clone_fails_when_gballoc_fails)
         {
             ///arrange
-			HTTP_HEADERS_HANDLE result;
+            HTTP_HEADERS_HANDLE result;
             HTTP_HEADERS_HANDLE source = HTTPHeaders_Alloc();
             umock_c_reset_all_calls();
 

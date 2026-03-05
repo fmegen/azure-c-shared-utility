@@ -144,7 +144,7 @@ TEST_FUNCTION(when_gballoc_is_not_initialized_gballoc_malloc_calls_crt_malloc)
 TEST_FUNCTION(when_gballoc_is_not_initialized_then_gballoc_calloc_calls_crt_calloc)
 {
     // arrange
-	void* result;
+    void* result;
     STRICT_EXPECTED_CALL(mock_calloc(1, 1));
 
     // act
@@ -161,7 +161,7 @@ TEST_FUNCTION(when_gballoc_is_not_initialized_then_gballoc_calloc_calls_crt_call
 TEST_FUNCTION(when_gballoc_is_not_initialized_then_gballoc_realloc_calls_crt_realloc)
 {
     // arrange
-	void* result;
+    void* result;
     STRICT_EXPECTED_CALL(mock_realloc(NULL, 1));
 
     // act

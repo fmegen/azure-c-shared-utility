@@ -324,8 +324,8 @@ TEST_FUNCTION(Condition_Wait_ok_on_trigger_and_zero_timeout)
 {
     // arrange
     LockAndCondition m;
-	THREAD_HANDLE th;
-	COND_RESULT result;
+    THREAD_HANDLE th;
+    COND_RESULT result;
     m.condition = Condition_Init();
     m.lock = Lock_Init();
     
@@ -348,7 +348,7 @@ TEST_FUNCTION(Condition_Wait_timeout_when_not_triggered)
 {
     // arrange
     LockAndCondition m; 
-	COND_RESULT result;
+    COND_RESULT result;
     m.condition = Condition_Init();
     m.lock = Lock_Init();
 
@@ -369,8 +369,8 @@ TEST_FUNCTION(Condition_Wait_ok_on_trigger_with_timeout)
 {
     // arrange
     LockAndCondition m;
-	COND_RESULT result;
-	THREAD_HANDLE th;
+    COND_RESULT result;
+    THREAD_HANDLE th;
     m.condition = Condition_Init();
     m.lock = Lock_Init();
 

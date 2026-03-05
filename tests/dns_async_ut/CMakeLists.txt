@@ -29,9 +29,9 @@ include_directories(.)
 include_directories(../../pal/inc)
 
 if(WIN32)
-	include_directories(./win32_fake_linux)
+    include_directories(./win32_fake_linux)
 else()
-	include_directories(../../pal/linux)
+    include_directories(../../pal/linux)
 endif()
 
 build_c_test_artifacts(${theseTestsName} ON "tests/azure_c_shared_utility_tests")

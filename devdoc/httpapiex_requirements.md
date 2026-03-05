@@ -3,10 +3,10 @@ HTTPAPIEX Requirements
 
 ## Overview
 HTTAPIEX is a utility module that provides HTTP requests with build-in retry capability to an HTTP server. Features over "regular" HTTPAPI include:
--	Optional parameters
--	Implementation independent
--	Retry mechanism
--	Persistent options
+-    Optional parameters
+-    Implementation independent
+-    Retry mechanism
+-    Persistent options
 
 ## References
 [httpapi_requirements]
@@ -61,14 +61,14 @@ If successful, HTTAPIEX writes in the out parameter statusCode the HTTP status, 
 **SRS_HTTPAPIEX_02_008: [** If parameter relativePath is NULL then HTTPAPIEX_INVALID_ARG shall not assume a relative path - that is, it will assume an empty path (""). **]**
 
 **SRS_HTTPAPIEX_02_009: [** If parameter requestHttpHeadersHandle is NULL then HTTPAPIEX_ExecuteRequest shall allocate a temporary internal instance of HTTPHEADERS, shall add to that instance the following headers
-	Host:{hostname} - as it was indicated by the call to HTTPAPIEX_Create API call
-	Content-Length:the size of the requestContent parameter, and use this instance to all the subsequent calls to HTTPAPI_ExecuteRequest as parameter httpHeadersHandle. **]**
+    Host:{hostname} - as it was indicated by the call to HTTPAPIEX_Create API call
+    Content-Length:the size of the requestContent parameter, and use this instance to all the subsequent calls to HTTPAPI_ExecuteRequest as parameter httpHeadersHandle. **]**
 
 **SRS_HTTPAPIEX_02_010: [** If any of the operations in SRS_HTTAPIEX_02_009 fails, then HTTPAPIEX_ExecuteRequest shall return HTTPAPIEX_ERROR. **]**
 
 **SRS_HTTPAPIEX_02_011: [** If parameter requestHttpHeadersHandle is not NULL then HTTPAPIEX_ExecuteRequest shall create or update the following headers of the request:
-	Host:{hostname}
-	Content-Length:the size of the requestContent parameter, and shall use the so constructed HTTPHEADERS object to all calls to HTTPAPI_ExecuteRequest as parameter httpHeadersHandle. **]**
+    Host:{hostname}
+    Content-Length:the size of the requestContent parameter, and shall use the so constructed HTTPHEADERS object to all calls to HTTPAPI_ExecuteRequest as parameter httpHeadersHandle. **]**
 
 **SRS_HTTPAPIEX_02_012: [** If any of the operations required for SRS_HTTAPIEX_02_011 fails, then HTTPAPIEX_ExecuteRequest shall return HTTPAPIEX_ERROR. **]**
 
@@ -93,9 +93,9 @@ If successful, HTTAPIEX writes in the out parameter statusCode the HTTP status, 
 **SRS_HTTPAPIEX_02_022: [** If responseContent is not NULL then HTTPAPIEX_ExecuteRequest use that as parameter responseContent of HTTPAPI_ExecuteRequest call. **]**
 
 **SRS_HTTPAPIEX_02_023: [** HTTPAPIEX_ExecuteRequest shall try to execute the HTTP call by ensuring the following API call sequence is respected: **]**
-1.	HTTPAPI_Init
-2.	HTTPAPI_CreateConnection
-3.	HTTPAPI_ExecuteRequest
+1.    HTTPAPI_Init
+2.    HTTPAPI_CreateConnection
+3.    HTTPAPI_ExecuteRequest
 
 **SRS_HTTPAPIEX_02_035: [** HTTPAPIEX_ExecuteRequest shall pass all the saved options (see HTTPAPIEX_SetOption) to the newly create HTTPAPI_HANDLE in step 2 by calling HTTPAPI_SetOption. **]**
 

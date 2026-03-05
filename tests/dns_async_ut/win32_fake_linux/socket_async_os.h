@@ -15,8 +15,8 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#define	AF_INET		2
-#define	SOCK_STREAM	1
+#define    AF_INET        2
+#define    SOCK_STREAM    1
 #define IPPROTO_TCP     6
 
 

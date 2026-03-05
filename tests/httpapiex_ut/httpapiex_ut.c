@@ -490,7 +490,7 @@ TEST_SUITE_CLEANUP(TestClassCleanup)
 
 TEST_FUNCTION_INITIALIZE(TestMethodInitialize)
 {
-	size_t i;
+    size_t i;
 
     if (TEST_MUTEX_ACQUIRE(g_testByTest))
     {
@@ -546,7 +546,7 @@ TEST_FUNCTION(HTTPAPIEX_Create_with_NULL_name_fails)
 TEST_FUNCTION(HTTPAPIEX_Create_succeeds)
 {
     /// arrange
-	HTTPAPIEX_HANDLE result;
+    HTTPAPIEX_HANDLE result;
     STRICT_EXPECTED_CALL(gballoc_malloc(IGNORED_NUM_ARG))
         .IgnoreArgument(1);
     STRICT_EXPECTED_CALL(STRING_construct(TEST_HOSTNAME));
@@ -673,7 +673,7 @@ TEST_FUNCTION(HTTPAPIEX_Destroy_frees_resources_3) /*this is destroy after havin
 TEST_FUNCTION(HTTPAPIEX_Create_fails_when_malloc_fails)
 {
     /// arrange
-	HTTPAPIEX_HANDLE result;
+    HTTPAPIEX_HANDLE result;
     whenShallmalloc_fail = currentmalloc_call + 1;
     STRICT_EXPECTED_CALL(gballoc_malloc(0))
         .IgnoreArgument(1);
@@ -692,7 +692,7 @@ TEST_FUNCTION(HTTPAPIEX_Create_fails_when_malloc_fails)
 TEST_FUNCTION(HTTPAPIEX_Create_fails_when_STRING_construct_fails)
 {
     /// arrange
-	HTTPAPIEX_HANDLE result;
+    HTTPAPIEX_HANDLE result;
     STRICT_EXPECTED_CALL(gballoc_malloc(0))
         .IgnoreArgument(1);
 
@@ -717,7 +717,7 @@ TEST_FUNCTION(HTTPAPIEX_Create_fails_when_STRING_construct_fails)
 TEST_FUNCTION(HTTPAPIEX_Create_fails_when_VECTOR_create_fails)
 {
     /// arrange
-	HTTPAPIEX_HANDLE result;
+    HTTPAPIEX_HANDLE result;
     STRICT_EXPECTED_CALL(gballoc_malloc(0))
         .IgnoreArgument(1);
 
@@ -760,7 +760,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_fails_with_invalid_request_type)
 {
     /// arrange
     unsigned int httpStatusCode;
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
     umock_c_reset_all_calls();
@@ -781,7 +781,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_happy_path_with_all_non_NULL_parameters)
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -811,7 +811,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_NULL_relativePath_uses_empty)
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -845,7 +845,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_NULL_request_headers_and_NULL_reques
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -920,7 +920,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_NULL_request_headers_and_NULL_reques
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -967,7 +967,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_NULL_request_headers_and_NULL_reques
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1012,7 +1012,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_NULL_request_headers_and_NULL_reques
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1049,7 +1049,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_non_NULL_request_headers_and_NULL_re
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1121,7 +1121,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_non_NULL_request_headers_and_NULL_re
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1165,7 +1165,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_non_NULL_request_headers_and_NULL_re
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1207,7 +1207,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_non_NULL_request_headers_and_NULL_re
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1236,7 +1236,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_non_NULL_request_headers_and_non_NUL
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1305,7 +1305,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_non_NULL_request_headers_and_non_NUL
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1345,7 +1345,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_non_NULL_request_headers_and_non_NUL
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1383,7 +1383,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_NULL_statusCode_succeeds)
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     HTTP_HEADERS_HANDLE requestHttpHeaders;
     BUFFER_HANDLE requestHttpBody = TEST_BUFFER_REQ_BODY;
@@ -1451,7 +1451,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_non_NULL_statusCode_returns_that_cod
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 4567;
@@ -1522,7 +1522,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_cleans_when_originalhttpbody_is_NULL_and_
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1572,7 +1572,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_cleans_when_responsehttpbody_is_NULL_and_
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1626,7 +1626,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_NULL_response_headers_suceeds)
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 4567;
@@ -1705,7 +1705,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_NULL_response_headers_fails_when_HTT
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1748,7 +1748,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_non_NULL_response_headers_suceeds)
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 4567;
@@ -1819,7 +1819,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_NULL_response_body_suceeds)
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 4567;
@@ -1896,7 +1896,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_NULL_fails_when_BUFFER_new_fails)
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
@@ -1937,7 +1937,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_with_non_NULL_response_body_suceeds)
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 4567;
@@ -2014,7 +2014,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_TestCase_S1) /*refer to httpapiex_retry_m
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 23;
@@ -2045,7 +2045,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_TestCase_S2) /*refer to httpapiex_retry_m
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 23;
@@ -2111,7 +2111,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_TestCase_S3) /*refer to httpapiex_retry_m
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 23;
@@ -2218,7 +2218,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_TestCase_S4) /*refer to httpapiex_retry_m
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 23;
@@ -2299,7 +2299,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_TestCase_F1) /*refer to httpapiex_retry_m
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 23;
@@ -2346,7 +2346,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_TestCase_F2) /*refer to httpapiex_retry_m
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 23;
@@ -2405,7 +2405,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_TestCase_F3) /*refer to httpapiex_retry_m
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 23;
@@ -2492,7 +2492,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_TestCase_F4) /*refer to httpapiex_retry_m
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 23;
@@ -2569,7 +2569,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_TestCase_F5) /*refer to httpapiex_retry_m
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 23;
@@ -2655,7 +2655,7 @@ TEST_FUNCTION(HTTPAPIEX_ExecuteRequest_TestCase_F6) /*refer to httpapiex_retry_m
 {
     /// arrange
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
 
     unsigned int httpStatusCode;
     unsigned int asGivenByHttpApi = 23;
@@ -2784,7 +2784,7 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_fails_with_NULL_handle)
 TEST_FUNCTION(HTTPAPIEX_SetOption_fails_with_NULL_optionName_fails)
 {
     /// arrange
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
     umock_c_reset_all_calls();
 
@@ -2804,7 +2804,7 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_fails_with_NULL_value_fails)
 {
     /// arrange
     HTTPAPIEX_RESULT result;
-	HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
+    HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
     umock_c_reset_all_calls();
 
     /// act
@@ -2823,7 +2823,7 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_fails_with_NULL_value_fails)
 TEST_FUNCTION(HTTPAPIEX_SetOption_happy_path_without_httpapi_handle_succeeds)
 {
     /// arrange
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
     umock_c_reset_all_calls();
 
@@ -2854,8 +2854,8 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_happy_path_without_httpapi_handle_succeeds)
 TEST_FUNCTION(HTTPAPIEX_SetOption_happy_path_without_httpapi_handle_can_save_2_options_succeeds)
 {
     /// arrange
-	HTTPAPIEX_RESULT result1;
-	HTTPAPIEX_RESULT result2;
+    HTTPAPIEX_RESULT result1;
+    HTTPAPIEX_RESULT result2;
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
     umock_c_reset_all_calls();
 
@@ -2898,10 +2898,10 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_happy_path_without_httpapi_handle_can_save_2_o
 TEST_FUNCTION(HTTPAPIEX_SetOption_passes_saved_options_to_httpapi_succeeds)
 {
     /// arrange
-	HTTPAPIEX_RESULT result;
-	HTTPAPIEX_HANDLE httpapiexhandle;
-	size_t requestHttpBodyLength;
-	const unsigned char* requestHttpBodyContent;
+    HTTPAPIEX_RESULT result;
+    HTTPAPIEX_HANDLE httpapiexhandle;
+    size_t requestHttpBodyLength;
+    const unsigned char* requestHttpBodyContent;
     unsigned int httpStatusCode;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
     BUFFER_HANDLE requestHttpBody = TEST_BUFFER_REQ_BODY;
@@ -2977,10 +2977,10 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_passes_saved_options_to_httpapi_ignores_errors
 {
     /// arrange
     unsigned int httpStatusCode;
-	size_t requestHttpBodyLength;
-	const unsigned char* requestHttpBodyContent;
-	HTTPAPIEX_RESULT result;
-	HTTPAPIEX_HANDLE httpapiexhandle;
+    size_t requestHttpBodyLength;
+    const unsigned char* requestHttpBodyContent;
+    HTTPAPIEX_RESULT result;
+    HTTPAPIEX_HANDLE httpapiexhandle;
     HTTP_HEADERS_HANDLE requestHttpHeaders;
     BUFFER_HANDLE requestHttpBody = TEST_BUFFER_REQ_BODY;
     HTTP_HEADERS_HANDLE responseHttpHeaders;
@@ -3056,7 +3056,7 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_passes_saved_options_to_httpapi_ignores_errors
 TEST_FUNCTION(HTTPAPIEX_SetOption_fails_when_VECTOR_push_back_fails)
 {
     /// arrange
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
     umock_c_reset_all_calls();
 
@@ -3092,7 +3092,7 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_fails_when_VECTOR_push_back_fails)
 TEST_FUNCTION(HTTPAPIEX_SetOption_fails_when_gballoc_fails_1)
 {
     /// arrange
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
     umock_c_reset_all_calls();
 
@@ -3122,7 +3122,7 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_fails_when_gballoc_fails_1)
 TEST_FUNCTION(HTTPAPIEX_SetOption_fails_when_HTTPAPI_SaveOption_fails_3)
 {
     /// arrange
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
     umock_c_reset_all_calls();
     
@@ -3145,7 +3145,7 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_fails_when_HTTPAPI_SaveOption_fails_3)
 TEST_FUNCTION(HTTPAPIEX_SetOption_fails_when_HTTPAPI_SaveOption_fails_4)
 {
     /// arrange
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
     umock_c_reset_all_calls();
 
@@ -3168,7 +3168,7 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_fails_when_HTTPAPI_SaveOption_fails_4)
 TEST_FUNCTION(HTTPAPIEX_SetOption_passes_saved_options_to_existing_httpapi_handle_succeeds)
 {
     /// arrange
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
 
     unsigned int httpStatusCode;
@@ -3212,7 +3212,7 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_passes_saved_options_to_existing_httpapi_handl
 TEST_FUNCTION(HTTPAPIEX_SetOption_passes_saved_options_to_existing_httpapi_handle_fails_1)
 {
     /// arrange
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
 
     unsigned int httpStatusCode;
@@ -3257,7 +3257,7 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_passes_saved_options_to_existing_httpapi_handl
 TEST_FUNCTION(HTTPAPIEX_SetOption_passes_saved_options_to_existing_httpapi_handle_fails_2)
 {
     /// arrange
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
     HTTPAPIEX_HANDLE httpapiexhandle = HTTPAPIEX_Create(TEST_HOSTNAME);
 
     unsigned int httpStatusCode;
@@ -3301,7 +3301,7 @@ TEST_FUNCTION(HTTPAPIEX_SetOption_passes_saved_options_to_existing_httpapi_handl
 /*Tests_SRS_HTTPAPIEX_02_039: [If HTTPAPI_CloneOption returns HTTPAPI_OK then HTTPAPIEX_SetOption shall create or update the pair optionName/value.]*/
 TEST_FUNCTION(HTTPAPIEX_SetOption_happy_path_on_update_option_value_succeeds)
 {
-	HTTPAPIEX_RESULT result;
+    HTTPAPIEX_RESULT result;
     const char* OPTION_NAME = "someOption";
 
     /// arrange

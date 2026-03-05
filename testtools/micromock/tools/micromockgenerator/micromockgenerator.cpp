@@ -198,7 +198,7 @@ void GenerateTimeDiscreteMockCallMacros(_In_ size_t supportedArgCount)
         fout << endl;
     }
 
-    fout<<"#define STIM_CALL_AT(var, time, ...)	var.__VA_ARGS__.SetTime(time, var.getAndIncOrder(time))"<<endl;
+    fout<<"#define STIM_CALL_AT(var, time, ...)    var.__VA_ARGS__.SetTime(time, var.getAndIncOrder(time))"<<endl;
     fout<<endl;
 
     for(i=0;i<supportedArgCount;i++)
@@ -369,7 +369,7 @@ void GenerateTimeDiscreteMockCallMacros(_In_ size_t supportedArgCount)
             fout<<" C>& setArraySize(_In_ UINT32 parameter, _In_ size_t nElements)"<<endl;
             fout<<tab<<"{"<<endl;
             fout<<tab<<tab<<"if(allCalls.size()==0)"<<endl;
-            fout<<tab<<tab<<"{"<<endl;	
+            fout<<tab<<tab<<"{"<<endl;    
             fout<<tab<<tab<<tab<<"throw CMicroMockException(MICROMOCK_EXCEPTION_SET_ARRAY_SIZE_BEFORE_CALL, _T(\"using setArraySize before the call has been defined usually indicates an error in test code\"));"<<endl;
             fout<<tab<<tab<<"}"<<endl;
             fout<<tab<<tab<<"else"<<endl;

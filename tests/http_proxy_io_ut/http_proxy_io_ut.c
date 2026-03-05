@@ -560,7 +560,7 @@ TEST_FUNCTION(http_proxy_io_create_with_NULL_proxy_hostname_fails)
 TEST_FUNCTION(when_a_call_made_by_http_proxy_io_create_fails_then_http_proxy_io_create_fails)
 {
     // arrange
-	size_t i;
+    size_t i;
     int negativeTestsInitResult = umock_c_negative_tests_init();
     ASSERT_ARE_EQUAL(int, 0, negativeTestsInitResult);
 

@@ -29,10 +29,10 @@ choice /C yn /M "Do you want to download and run nuget.exe?"
 if not !errorlevel!==1 goto :eof
 rem if nuget.exe is not found, then ask user
 Powershell.exe wget -outf nuget.exe https://nuget.org/nuget.exe
-	if not exist .\nuget.exe (
-		echo nuget does not exist
-		exit /b 1
-	)
+    if not exist .\nuget.exe (
+        echo nuget does not exist
+        exit /b 1
+    )
 )
 
 set build-path=%build-root%\cmake
@@ -42,14 +42,14 @@ echo Build path is %build-path%
 echo Client root is %client-root%
 
 if exist %build-path%\shared-util_output (
-	rmdir /s/q %build-path%\shared-util_output
-	rem no error checking
+    rmdir /s/q %build-path%\shared-util_output
+    rem no error checking
 )
 
 echo checking for nupkg
 if exist %build-root%\build_all\packaging\windows\*.nupkg (
-	echo deleting nupkg
-	del %build-root%\build_all\packaging\windows\*.nupkg
+    echo deleting nupkg
+    del %build-root%\build_all\packaging\windows\*.nupkg
 )
 
 rem -----------------------------------------------------------------------------

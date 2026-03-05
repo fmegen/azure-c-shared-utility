@@ -19,7 +19,7 @@ static int keep_count;     // number of times to try before declaring failure (i
 
 static int my_setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen)
 {
-	int value;
+    int value;
     (void)optlen;
     // All options are integers
     ASSERT_ARE_EQUAL(int, sockfd, test_socket);
