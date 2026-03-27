@@ -689,11 +689,17 @@ static void send_handshake_bytes(TLS_IO_INSTANCE* tls_io_instance)
         {
             if (ssl_err == SSL_ERROR_SSL)
             {
-                LogError("TLS handshake failed with SSL error: %s", ERR_error_string(ERR_get_error(), NULL));
+                long verify_result = SSL_get_verify_result(tls_io_instance->ssl);
+                LogError("TLS handshake failed for %s with SSL error: %s (verify result: %ld - %s)",
+                    hostname,
+                    ERR_error_string(ERR_get_error(), NULL),
+                    verify_result,
+                    X509_verify_cert_error_string(verify_result));
+                log_ERR_get_error("Additional OpenSSL error queue entries");
             }
             else
             {
-                LogError("TLS handshake failed: ssl_err=%d", ssl_err);
+                LogError("TLS handshake failed for %s: ssl_err=%d", hostname, ssl_err);
             }
             tls_io_instance->tlsio_state = TLSIO_STATE_HANDSHAKE_FAILED;
         }
