@@ -149,6 +149,7 @@
     REQUIRED_FUNCTION(SSL_do_handshake) \
     REQUIRED_FUNCTION(SSL_free) \
     REQUIRED_FUNCTION(SSL_get_error) \
+    REQUIRED_FUNCTION(SSL_get_verify_result) \
     REQUIRED_FUNCTION_1_0_2(SSL_library_init) \
     REQUIRED_FUNCTION_1_0_2(SSL_load_error_strings) \
     REQUIRED_FUNCTION(SSL_new) \
@@ -208,6 +209,7 @@
     REQUIRED_FUNCTION(SSL_set_verify) \
     REQUIRED_FUNCTION(X509_STORE_set_verify_cb) \
     REQUIRED_FUNCTION(X509_STORE_CTX_get_error) \
+    REQUIRED_FUNCTION(X509_verify_cert_error_string) \
     REQUIRED_FUNCTION(SSL_get0_param)
 
 #if USE_OPENSSL_1_1_0_OR_UP
@@ -287,6 +289,7 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define SSL_do_handshake SSL_do_handshake_ptr
 #define SSL_free SSL_free_ptr
 #define SSL_get_error SSL_get_error_ptr
+#define SSL_get_verify_result SSL_get_verify_result_ptr
 #define SSL_new SSL_new_ptr
 #define SSL_read SSL_read_ptr
 #define SSL_set_bio SSL_set_bio_ptr
@@ -319,6 +322,7 @@ FOR_ALL_OPENSSL_FUNCTIONS
 #define SSL_set_verify SSL_set_verify_ptr
 #define X509_STORE_set_verify_cb X509_STORE_set_verify_cb_ptr
 #define X509_STORE_CTX_get_error X509_STORE_CTX_get_error_ptr
+#define X509_verify_cert_error_string X509_verify_cert_error_string_ptr
 #define SSL_get0_param SSL_get0_param_ptr
 
 #if USE_OPENSSL_3_0_X
