@@ -8,15 +8,15 @@ using namespace std;
 // Tests TOC
 //------------------------------------------------------------------------------------------------------------------------------
 // - Stringify NULL arguments
-//        TEST_FUNCTION(MicroMock_TFS102616_NULL_Const_wchar_Pointer_Does_Not_Trigger_Exceptions)
-//        TEST_FUNCTION(MicroMock_TFS102616_NULL_Const_char_Pointer_Does_Not_Trigger_Exceptions)
-//        TEST_FUNCTION(MicroMock_TFS102616_NULL_wchar_Pointer_Does_Not_Trigger_Exceptions)
-//        TEST_FUNCTION(MicroMock_TFS102616_NULL_char_Pointer_Does_Not_Trigger_Exceptions)
+//        TEST_FUNCTION(MicroMock_NULL_Const_wchar_Pointer_Does_Not_Trigger_Exceptions)
+//        TEST_FUNCTION(MicroMock_NULL_Const_char_Pointer_Does_Not_Trigger_Exceptions)
+//        TEST_FUNCTION(MicroMock_NULL_wchar_Pointer_Does_Not_Trigger_Exceptions)
+//        TEST_FUNCTION(MicroMock_NULL_char_Pointer_Does_Not_Trigger_Exceptions)
 // - Stringify non-NULL arguments
-//        TEST_FUNCTION(MicroMock_TFS102616_Const_wchar_String_Is_Printed_As_Such_In_Unexpected_Call)
-//        TEST_FUNCTION(MicroMock_TFS102616_Const_char_String_Is_Printed_As_Such_In_Unexpected_Call)
-//        TEST_FUNCTION(MicroMock_TFS102616_wchar_String_Is_Printed_As_Such_In_Unexpected_Call)
-//        TEST_FUNCTION(MicroMock_TFS102616_char_String_Is_Printed_As_Such_In_Unexpected_Call)
+//        TEST_FUNCTION(MicroMock_Const_wchar_String_Is_Printed_As_Such_In_Unexpected_Call)
+//        TEST_FUNCTION(MicroMock_Const_char_String_Is_Printed_As_Such_In_Unexpected_Call)
+//        TEST_FUNCTION(MicroMock_wchar_String_Is_Printed_As_Such_In_Unexpected_Call)
+//        TEST_FUNCTION(MicroMock_char_String_Is_Printed_As_Such_In_Unexpected_Call)
 //------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -105,8 +105,7 @@ static MICROMOCK_GLOBAL_SEMAPHORE_HANDLE g_dllByDll;
         }
     }
 
-        /*http://webvstf:8080/tfs/web/wi.aspx?pcguid=8947f9e3-3622-497e-ab87-a27e01082a6c&id=102616*/
-        TEST_FUNCTION(MicroMock_TFS102616_NULL_Const_wchar_Pointer_Does_Not_Trigger_Exceptions)
+        TEST_FUNCTION(MicroMock_NULL_Const_wchar_Pointer_Does_Not_Trigger_Exceptions)
         {
             // arrange
             CSomeMocks testMock;
@@ -122,7 +121,7 @@ static MICROMOCK_GLOBAL_SEMAPHORE_HANDLE g_dllByDll;
                 _T("An unexpected call with NULL argument should be reported"));
         }
 
-        TEST_FUNCTION(MicroMock_TFS102616_NULL_Const_char_Pointer_Does_Not_Trigger_Exceptions)
+        TEST_FUNCTION(MicroMock_NULL_Const_char_Pointer_Does_Not_Trigger_Exceptions)
         {
             // arrange
             CSomeMocks testMock;
@@ -138,7 +137,7 @@ static MICROMOCK_GLOBAL_SEMAPHORE_HANDLE g_dllByDll;
                 _T("An unexpected call with NULL argument should be reported"));
         }
 
-        TEST_FUNCTION(MicroMock_TFS102616_NULL_wchar_Pointer_Does_Not_Trigger_Exceptions)
+        TEST_FUNCTION(MicroMock_NULL_wchar_Pointer_Does_Not_Trigger_Exceptions)
         {
             // arrange
             CSomeMocks testMock;
@@ -154,7 +153,7 @@ static MICROMOCK_GLOBAL_SEMAPHORE_HANDLE g_dllByDll;
                 _T("An unexpected call with NULL argument should be reported"));
         }
 
-        TEST_FUNCTION(MicroMock_TFS102616_NULL_char_Pointer_Does_Not_Trigger_Exceptions)
+        TEST_FUNCTION(MicroMock_NULL_char_Pointer_Does_Not_Trigger_Exceptions)
         {
             // arrange
             CSomeMocks testMock;
@@ -170,7 +169,7 @@ static MICROMOCK_GLOBAL_SEMAPHORE_HANDLE g_dllByDll;
                 _T("An unexpected call with NULL argument should be reported"));
         }
 
-        TEST_FUNCTION(MicroMock_TFS102616_Const_wchar_String_Is_Printed_As_Such_In_Unexpected_Call)
+        TEST_FUNCTION(MicroMock_Const_wchar_String_Is_Printed_As_Such_In_Unexpected_Call)
         {
             // arrange
             CSomeMocks testMock;
@@ -188,7 +187,7 @@ static MICROMOCK_GLOBAL_SEMAPHORE_HANDLE g_dllByDll;
                 _T("An unexpected call with NULL argument should be reported"));
         }
 
-        TEST_FUNCTION(MicroMock_TFS102616_Const_char_String_Is_Printed_As_Such_In_Unexpected_Call)
+        TEST_FUNCTION(MicroMock_Const_char_String_Is_Printed_As_Such_In_Unexpected_Call)
         {
             // arrange
             CSomeMocks testMock;
@@ -206,7 +205,7 @@ static MICROMOCK_GLOBAL_SEMAPHORE_HANDLE g_dllByDll;
                 _T("An unexpected call with NULL argument should be reported"));
         }
 
-        TEST_FUNCTION(MicroMock_TFS102616_wchar_String_Is_Printed_As_Such_In_Unexpected_Call)
+        TEST_FUNCTION(MicroMock_wchar_String_Is_Printed_As_Such_In_Unexpected_Call)
         {
             // arrange
             CSomeMocks testMock;
@@ -224,7 +223,7 @@ static MICROMOCK_GLOBAL_SEMAPHORE_HANDLE g_dllByDll;
                 _T("An unexpected call with NULL argument should be reported"));
         }
 
-        TEST_FUNCTION(MicroMock_TFS102616_char_String_Is_Printed_As_Such_In_Unexpected_Call)
+        TEST_FUNCTION(MicroMock_char_String_Is_Printed_As_Such_In_Unexpected_Call)
         {
             // arrange
             CSomeMocks testMock;
